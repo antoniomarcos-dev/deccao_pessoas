@@ -1,0 +1,30 @@
+# Python Caches
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Ambientes Virtuais
+.venv/
+.venv*/
+env/
+venv/
+ENV/
+
+# Ultralytics & Runs
+runs/
+*.pt.cache
+logs/ultralytics/
+Ultralytics/
+
+# Arquivos temporários e de Sistema
+.DS_Store
+Thumbs.db
+*.tmp
+temp/
+
+# IDEs
+.vscode/
+.idea/
+*.swp

@@ -1,0 +1,15 @@
+data,horario,origem,tipo,quantidade,confianca_minima,dispositivo
+2026-09-22,20:42:50,273271-1a51000317893a5_jpg.rf.SqpNlKaY8W8fOL87aRdA.jpg,imagem,0,0.95,cpu
+2026-09-22,20:43:02,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,0,0.95,cpu
+2026-09-22,20:43:05,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,1,0.85,cpu
+2026-09-22,20:43:08,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,11,0.05,cpu
+2026-09-22,20:43:16,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,11,0.05,cpu
+2026-09-22,20:43:32,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
+2026-09-22,20:43:43,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,1,0.15,cpu
+2026-09-22,20:43:45,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
+2026-09-22,20:43:46,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
+2026-09-22,20:43:48,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
+2026-09-22,21:04:58,273271-106f1000376a0c4c_jpg.rf.UJVS8HLEiHnIW5kMJFiy.jpg,imagem,10,0.35,cpu
+2026-09-22,21:15:16,Webcam (Índice 0),webcam,3,0.35,cpu
+2026-09-22,21:15:51,273275-11f07100015256a16_jpg.rf.krNn1zcFMvsGv4dn5xEd.jpg,imagem,10,0.35,cpu
+2026-09-22,21:18:12,273275-11f07100015256a16_jpg.rf.krNn1zcFMvsGv4dn5xEd.jpg,imagem,10,0.35,cpu

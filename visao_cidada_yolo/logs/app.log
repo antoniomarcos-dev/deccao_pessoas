@@ -1,0 +1,25 @@
+2026-09-22 20:35:36,920 | ERROR | check_dataset | Arquivo ausente: E:\dec_pessoas\visao_cidada_yolo\dataset\data.yaml
+2026-09-22 20:35:48,048 | ERROR | check_dataset | Split train precisa de E:\dec_pessoas\visao_cidada_yolo\dataset\images\train e E:\dec_pessoas\visao_cidada_yolo\dataset\labels\train
+2026-09-22 20:35:48,048 | INFO | check_dataset | Classes configuradas: {0: 'pessoa'}
+2026-09-22 21:02:20,769 | INFO | check_dataset | Verificando integridade do dataset...
+2026-09-22 21:02:20,786 | INFO | check_dataset | [train] OK: 3465 imagens, 3465 labels identificados em 'train'
+2026-09-22 21:02:20,791 | INFO | check_dataset | [val] OK: 977 imagens, 977 labels identificados em 'valid'
+2026-09-22 21:02:20,793 | INFO | check_dataset | [test] OK: 487 imagens, 487 labels identificados em 'test'
+2026-09-22 21:02:20,793 | INFO | check_dataset | Classes configuradas: {0: 'pessoa'}
+2026-09-22 21:02:20,794 | INFO | check_dataset | ==> Dataset valido e pronto para treinamento e avaliacao!
+2026-09-22 21:04:58,820 | INFO | test_image | Pessoas detectadas: 10
+2026-09-22 21:04:58,821 | INFO | test_image | Resultado salvo em runs\predictions
+2026-09-22 21:06:50,936 | INFO | check_dataset | Verificando integridade do dataset...
+2026-09-22 21:06:50,952 | INFO | check_dataset | [train] OK: 3465 imagens, 3465 labels identificados em 'train'
+2026-09-22 21:06:50,957 | INFO | check_dataset | [val] OK: 977 imagens, 977 labels identificados em 'valid'
+2026-09-22 21:06:50,959 | INFO | check_dataset | [test] OK: 487 imagens, 487 labels identificados em 'test'
+2026-09-22 21:06:50,959 | INFO | check_dataset | Classes configuradas: {0: 'pessoa'}
+2026-09-22 21:06:50,960 | INFO | check_dataset | ==> Dataset valido e pronto para treinamento e avaliacao!
+2026-09-22 21:10:32,198 | INFO | webcam | Carregando modelo yolo11n.pt...
+2026-09-22 21:10:32,231 | INFO | webcam | Abrindo câmera índice 0...
+2026-09-22 21:10:33,157 | INFO | webcam | Webcam iniciada com sucesso. Pressione Q na janela para sair.
+2026-09-22 21:10:33,949 | INFO | webcam | Sessão da webcam finalizada.
+2026-09-22 21:10:42,503 | INFO | webcam | Carregando modelo yolo11n.pt...
+2026-09-22 21:10:42,541 | INFO | webcam | Abrindo câmera índice 0...
+2026-09-22 21:10:43,172 | INFO | webcam | Webcam iniciada com sucesso. Pressione Q na janela para sair.
+2026-09-22 21:10:43,776 | INFO | webcam | Sessão da webcam finalizada.
