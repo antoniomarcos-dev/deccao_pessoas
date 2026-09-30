@@ -23,3 +23,34 @@
 2026-09-22 21:10:42,541 | INFO | webcam | Abrindo câmera índice 0...
 2026-09-22 21:10:43,172 | INFO | webcam | Webcam iniciada com sucesso. Pressione Q na janela para sair.
 2026-09-22 21:10:43,776 | INFO | webcam | Sessão da webcam finalizada.
+2026-09-29 13:12:41,413 | INFO | webcam | Carregando modelo yolo11m.pt...
+2026-09-29 13:12:46,820 | INFO | webcam | Abrindo câmera índice 0...
+2026-09-29 13:12:48,016 | INFO | webcam | Webcam iniciada com sucesso. Pressione Q na janela para sair.
+2026-09-29 13:14:38,428 | INFO | train | Configuracoes de treinamento:
+2026-09-29 13:14:38,429 | INFO | train | Epocas: 105, Batch: -1, Image Size: 800
+2026-09-29 13:14:38,430 | INFO | train | Modelo Base: yolo11x.pt, Optimizer: AdamW, LR0: 0.001000
+2026-09-29 13:14:38,432 | INFO | train | Preset Augmentation: aggressive, Device: cpu, Resume: None
+2026-09-29 13:14:38,433 | INFO | train | Patience: 30, Freeze: 0, AMP: True, Label Smoothing: 0.010000
+2026-09-29 13:15:04,845 | INFO | train | Iniciando o treinamento do modelo.
+2026-09-29 13:15:27,160 | INFO | train | Configuracoes de treinamento:
+2026-09-29 13:15:27,166 | INFO | train | Epocas: 105, Batch: -1, Image Size: 800
+2026-09-29 13:15:27,168 | INFO | train | Modelo Base: yolo11x.pt, Optimizer: AdamW, LR0: 0.001000
+2026-09-29 13:15:27,174 | INFO | train | Preset Augmentation: aggressive, Device: cpu, Resume: None
+2026-09-29 13:15:27,175 | INFO | train | Patience: 30, Freeze: 0, AMP: True, Label Smoothing: 0.010000
+2026-09-29 13:20:25,508 | INFO | check_dataset | Verificando integridade do dataset...
+2026-09-29 13:20:25,543 | INFO | check_dataset | [train] OK: 3465 imagens, 3465 labels identificados em 'train'
+2026-09-29 13:20:25,555 | INFO | check_dataset | [val] OK: 977 imagens, 977 labels identificados em 'valid'
+2026-09-29 13:20:25,561 | INFO | check_dataset | [test] OK: 487 imagens, 487 labels identificados em 'test'
+2026-09-29 13:20:25,562 | INFO | check_dataset | Classes configuradas: {0: 'pessoa'}
+2026-09-29 13:20:25,565 | INFO | check_dataset | ==> Dataset valido e pronto para treinamento e avaliacao!
+2026-09-29 13:20:36,258 | INFO | train | Configuracoes de treinamento:
+2026-09-29 13:20:36,259 | INFO | train | Epocas: 100, Batch: -1, Image Size: 800
+2026-09-29 13:20:36,259 | INFO | train | Modelo Base: yolo11m.pt, Optimizer: AdamW, LR0: 0.001000
+2026-09-29 13:20:36,260 | INFO | train | Preset Augmentation: medium, Device: cpu, Resume: None
+2026-09-29 13:20:36,260 | INFO | train | Patience: 30, Freeze: 0, AMP: True, Label Smoothing: 0.010000
+2026-09-29 13:20:43,433 | INFO | train | Iniciando o treinamento do modelo.
+2026-09-29 13:21:41,342 | INFO | train | Configuracoes de treinamento:
+2026-09-29 13:21:41,384 | INFO | train | Epocas: 200, Batch: -1, Image Size: 800
+2026-09-29 13:21:41,390 | INFO | train | Modelo Base: yolo11x.pt, Optimizer: AdamW, LR0: 0.001000
+2026-09-29 13:21:41,396 | INFO | train | Preset Augmentation: medium, Device: cpu, Resume: None
+2026-09-29 13:21:41,407 | INFO | train | Patience: 30, Freeze: 0, AMP: True, Label Smoothing: 0.010000

@@ -1,8 +1,0 @@
-# Dataset YOLO para deteccao de pessoas (Roboflow).
-path: F:/dec_pessoas/visao_cidada_yolo/dataset
-train: train/images
-val: valid/images
-test: test/images
-
-names:
-  0: pessoa

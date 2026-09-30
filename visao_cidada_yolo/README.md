@@ -49,47 +49,13 @@ python webcam.py --camera 0 --confidence 0.35
 
 ---
 
-## 📁 Estrutura do Dataset
+## 🧠 Modelo de Inteligência Artificial (`best.pt`)
 
-O projeto utiliza a estrutura padrão do Roboflow / Ultralytics:
+O sistema utiliza como modelo base os pesos customizados **`best.pt`**, treinados via Google Colab especificamente para detecção e contagem de alta precisão da classe `pessoa` (ID 0).
 
-```text
-dataset/
-  data.yaml
-  train/
-    images/*.jpg
-    labels/*.txt
-  valid/
-    images/*.jpg
-    labels/*.txt
-  test/
-    images/*.jpg
-    labels/*.txt
-```
-
-Para validar a integridade de todas as anotações e imagens:
-
-```powershell
-python check_dataset.py
-```
-
----
-
-## 🛠️ Treinamento e Avaliação
-
-```powershell
-# Treinar novo modelo com o dataset configurado
-python train.py
-
-# Validar pesos treinados
-python validate.py --weights models/treino/weights/best.pt
-
-# Gerar métricas completas (Precisão, Recall, mAP50, mAP50-95 e matrizes)
-python evaluate.py --weights models/treino/weights/best.pt
-
-# Testar em uma imagem avulsa
-python test_image.py caminho/para/imagem.jpg
-```
+- **Pesos Padrão:** `visao_cidada_yolo/best.pt`
+- **Treinamento e Validação:** Realizados em nuvem (Google Colab).
+- **Repositório Local:** Otimizado exclusivamente para execução em tempo real, alta performance de inferência e monitoramento ético.
 
 ---
 

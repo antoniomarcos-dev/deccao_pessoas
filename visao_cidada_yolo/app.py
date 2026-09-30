@@ -25,16 +25,7 @@ from config import (
     SNAPSHOTS_DIR,
     ensure_project_directories,
     get_available_models,
-    EPOCHS,
-    BATCH_SIZE,
     IMAGE_SIZE,
-    OPTIMIZER,
-    LR0,
-    PATIENCE,
-    AMP,
-    COS_LR,
-    MULTI_SCALE,
-    LABEL_SMOOTHING,
 )
 from inference import (
     annotate_frame,
@@ -241,14 +232,6 @@ def main() -> None:
         help="Aplica algoritmo CLAHE para melhorar a detecção em ambientes com baixa luminosidade.",
     )
 
-    st.sidebar.markdown("---")
-    st.sidebar.markdown("### 🏋️ Treinamento Rápido")
-    quick_epochs = st.sidebar.number_input("Épocas para Treino Rápido", min_value=5, max_value=1000, value=50, step=5)
-    
-    if st.sidebar.button("Ir para Treinamento", use_container_width=True):
-        st.session_state["jump_to_train"] = True
-        st.session_state["quick_epochs_val"] = quick_epochs
-        st.sidebar.success("Navegue até a aba 'Treinamento' e as épocas estarão configuradas!")
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 🖥️ Aceleração de Hardware")
@@ -276,12 +259,11 @@ def main() -> None:
     render_header(selected_device, blur_faces, selected_model_name)
 
     # --- ABAS PRINCIPAIS ---
-    tab_webcam, tab_media, tab_dashboard, tab_train, tab_settings = st.tabs([
+    tab_webcam, tab_media, tab_dashboard, tab_settings = st.tabs([
         "📷 Webcam em Tempo Real",
         "📁 Análise de Mídia (Fotos e Vídeos)",
         "📊 Dashboard & Histórico",
-        "🏋️ Treinamento",
-        "⚙️ Configurações & Validação",
+        "⚙️ Informações do Sistema & Modelo",
     ])
 
     # =========================================================================
@@ -618,124 +600,67 @@ def main() -> None:
             st.info("Nenhuma análise registrada no histórico ainda. Execute uma detecção por foto, vídeo ou webcam para visualizar os dados.")
 
     # =========================================================================
-    # TAB 4: TREINAMENTO
-    # =========================================================================
-    with tab_train:
-        st.markdown("### 🏋️ Treinamento do Modelo Customizado")
-        st.markdown("Treine e faça fine-tuning do modelo YOLO no seu próprio dataset para adequá-lo melhor ao seu cenário de uso.")
-        
-        default_ep = st.session_state.get("quick_epochs_val", 100)
-        
-        with st.form("training_form"):
-            col_t1, col_t2 = st.columns(2)
-            with col_t1:
-                t_epochs = st.number_input("Número de Épocas", min_value=5, max_value=1000, value=default_ep, step=5, help="Número de passagens completas pelo dataset de treinamento.")
-                t_model = st.selectbox("Modelo Base (YOLO)", ['yolo11n.pt', 'yolo11s.pt', 'yolo11m.pt', 'yolo11l.pt', 'yolo11x.pt'], index=2, help="n=Nano (rápido), s=Small, m=Medium (recomendado), l=Large, x=Extra Large (mais pesado, maior acurácia).")
-                t_img_size = st.selectbox("Tamanho da Imagem", [480, 640, 800, 1024, 1280], index=2, help="Tamanho base da imagem para treinamento.")
-                t_batch = st.selectbox("Tamanho do Lote (Batch Size)", [-1, 4, 8, 16, 32], index=0, help="-1 define automaticamente com base na VRAM disponível.")
-                t_run_name = st.text_input("Nome da Sessão (Run Name)", value='treino_custom')
-                
-            with col_t2:
-                t_optim = st.selectbox("Otimizador", ['AdamW', 'SGD', 'Adam', 'RMSProp'], index=0)
-                t_lr = st.number_input("Taxa de Aprendizado (Learning Rate)", min_value=0.0001, max_value=0.1, value=0.001, step=0.0001, format="%.4f")
-                t_patience = st.number_input("Paciência (Early Stopping)", min_value=5, max_value=100, value=30, help="Parar se não houver melhoria em N épocas seguidas.")
-                t_aug = st.selectbox("Nível de Augmentation", ['Leve', 'Médio', 'Agressivo'], index=1, help="Adiciona variações na imagem (zoom, rotação, cores) para melhorar a generalização do modelo.")
-                t_freeze = st.number_input("Congelar Camadas (Freeze Layers)", min_value=0, max_value=22, value=0, help="Útil em transfer learning para acelerar treino congelando extratores de features (ex: 10).")
-
-            st.markdown("##### Opções Avançadas de Otimização")
-            col_ta1, col_ta2, col_ta3 = st.columns(3)
-            with col_ta1:
-                t_amp = st.toggle("Ativar AMP (Precisão Mista)", value=True, help="Acelera o treino usando half-precision no hardware suportado.")
-            with col_ta2:
-                t_cos = st.toggle("Cosine LR Scheduler", value=COS_LR, help="Taxa de aprendizado com queda suave em curva de cosseno (recomendado).")
-            with col_ta3:
-                t_multi = st.toggle("Multi-Scale Training", value=False, help="Altera aleatoriamente o tamanho da imagem durante o treino (±50%).")
-                
-            btn_start_train = st.form_submit_button("🚀 Iniciar Treinamento", type="primary", use_container_width=True)
-
-        if btn_start_train:
-            with st.spinner("⏳ Treinamento em andamento... Isso pode levar de minutos a horas dependendo do dataset e hardware."):
-                from train import train_from_ui
-
-                # Mapeia nomes em português para chaves internas em inglês
-                _aug_map = {"Leve": "light", "Médio": "medium", "Agressivo": "aggressive"}
-                aug_key = _aug_map.get(t_aug, "medium")
-
-                try:
-                    train_from_ui(
-                        model_name=t_model,
-                        epochs=t_epochs,
-                        imgsz=t_img_size,
-                        batch=t_batch,
-                        name=t_run_name,
-                        optimizer=t_optim,
-                        lr0=t_lr,
-                        patience=t_patience,
-                        augment_preset=aug_key,
-                        freeze=t_freeze,
-                        amp=t_amp,
-                        cos_lr=t_cos,
-                        multi_scale=t_multi,
-                        device=selected_device,
-                    )
-                    st.success("✅ Treinamento concluído com sucesso! Verifique a pasta `models/` para os pesos gerados.")
-                    st.balloons()
-                except Exception as e:
-                    st.error(f"❌ Erro durante o treinamento: {str(e)}")
-                    st.exception(e)
-
-        with st.expander("📖 Guia de Treinamento", expanded=False):
-            st.markdown("""
-            - **Número de Épocas:** Quantas vezes o modelo verá o dataset inteiro. Para detecção de pessoas, 100-300 é o ideal dependendo do dataset.
-            - **Modelo Base:** `yolo11n` (nano) é mais rápido. `yolo11x` (extra large) tem maior acurácia mas é muito pesado.
-            - **Batch Size:** Lotes maiores estabilizam gradientes, mas consomem mais memória GPU. Use -1 para auto-detectar.
-            - **Augmentation:** Ajuda a prevenir *overfitting*. Se o ambiente varia muito, use Médio ou Agressivo.
-            - **Paciência (Early Stopping):** Impede que você perca tempo. Se a métrica não melhora por X épocas, para o treino.
-            """)
-
-    # =========================================================================
-    # TAB 5: CONFIGURAÇÕES E VALIDAÇÃO
+    # TAB 4: SISTEMA E MODELO
     # =========================================================================
     with tab_settings:
-        st.markdown("### ⚙️ Integridade do Dataset e Diagnóstico do Sistema")
+        st.markdown("### ⚙️ Informações do Modelo e Diagnóstico do Sistema")
 
-        st.markdown("##### 📁 Diagnóstico do Dataset de Treinamento")
-        if st.button("🔍 Executar Verificação de Integridade do Dataset", type="secondary"):
-            with st.spinner("Analisando pastas e anotações do dataset..."):
-                from check_dataset import main as run_check_dataset
-                code = run_check_dataset()
-                if code == 0:
-                    st.success("✅ Dataset validado com sucesso! Estruturas train, valid e test devidamente sincronizadas.")
-                else:
-                    st.error("❌ Foram encontrados alertas ou inconsistências na estrutura do dataset. Verifique os logs.")
+        st.markdown("##### 🧠 Modelo Ativo e Capacidades de Detecção")
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            st.markdown(
+                f"""
+                - **Pesos Carregados:** `{selected_model_name}`
+                - **Resolução de Entrada:** `{IMAGE_SIZE}x{IMAGE_SIZE} px`
+                - **Classes Reconhecidas:** `{getattr(model, 'names', {0: 'pessoa'})}`
+                - **Origem:** Treinamento especializado via Google Colab (`best.pt`)
+                """
+            )
+        with col_m2:
+            st.markdown(
+                """
+                - **Otimização:** Filtro direto na classe `pessoa` (ID 0)
+                - **Anonimização:** Desfoque automático de rostos com OpenCV Haar Cascade
+                - **Registro:** Salvamento automático de métricas em CSV local
+                """
+            )
 
         st.markdown("---")
-        st.markdown("##### 📦 Informações do Ambiente e Dependências")
+        st.markdown("##### 📦 Ambiente de Execução e Hardware")
         col_env1, col_env2 = st.columns(2)
         with col_env1:
             st.write(f"**Python Runtime:** {os.sys.version.split()[0]}")
             st.write(f"**PyTorch:** {torch.__version__}")
-            st.write(f"**Suporte a CUDA (NVIDIA):** {'Disponível' if torch.cuda.is_available() else 'Não detectado (Modo CPU otimizado)'}")
+            st.write(f"**Suporte a CUDA (NVIDIA):** {'Disponível' if torch.cuda.is_available() else 'Não detectado (Modo CPU)'}")
         with col_env2:
             st.write(f"**OpenCV:** {cv2.__version__}")
             st.write(f"**Diretório de Snapshots:** `{SNAPSHOTS_DIR}`")
             st.write(f"**Arquivo de Registros:** `{RECORDS_FILE}`")
 
         st.markdown("---")
-        st.markdown("##### 💡 Dica: Módulo Desktop com HUD")
+        st.markdown("##### 🚀 Monitoramento Desktop Dedicado (HUD 60+ FPS)")
         st.markdown(
             """
-            Para estações fixas de monitoramento onde se deseja máxima taxa de quadros (60+ FPS) com teclas de atalho:
+            Para estações fixas ou portarias onde se deseja alta performance e controle rápido por teclado:
             ```powershell
-            python webcam.py --confidence 0.40
+            python webcam.py --confidence 0.35
             ```
-            **Atalhos da janela:**
-            - `[S]`: Salva snapshot fotográfico instantâneo
+            *(Ou execute o arquivo `iniciar_webcam_desktop.bat` na raiz do projeto)*
+
+            **Teclas de Atalho:**
+            - `[S]`: Salva snapshot instantâneo com anotações
             - `[B]`: Alterna desfoque facial de privacidade (LGPD)
             - `[C]`: Zera contador de pico de ocupação
             - `[ESPAÇO]`: Congela/retoma o feed da câmera
-            - `[Q]`: Fecha a aplicação
+            - `[Q]` ou `[ESC]`: Encerra a aplicação
             """
+        )
+
+        st.markdown("---")
+        st.markdown("##### 🛡️ Privacidade e Conformidade com a LGPD")
+        st.info(
+            "O sistema opera localmente em sua máquina. O modelo não efetua reconhecimento biométrico ou identificação civil. "
+            "Todas as mídias temporárias enviadas por upload são limpas automaticamente após o término do processamento."
         )
 
 
