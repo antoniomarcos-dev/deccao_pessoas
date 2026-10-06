@@ -26,13 +26,39 @@ IOU_THRESHOLD = 0.50
 PERSON_CLASS_ID = 0
 
 
+def get_available_devices() -> list[dict[str, str]]:
+    """Detecta os aceleradores de hardware disponíveis no sistema (GPU Intel, CUDA, CPU)."""
+    devices = []
+    
+    # 1. GPU Intel Integrada via OpenVINO
+    try:
+        import openvino as ov
+        core = ov.Core()
+        ov_devs = core.available_devices
+        if "GPU" in ov_devs:
+            gpu_name = core.get_property("GPU", "FULL_DEVICE_NAME")
+            devices.append({"id": "intel:gpu", "name": f"🚀 GPU Intel Integrada ({gpu_name})", "type": "intel_gpu"})
+        if "CPU" in ov_devs:
+            cpu_name = core.get_property("CPU", "FULL_DEVICE_NAME")
+            devices.append({"id": "intel:cpu", "name": f"⚡ CPU Intel Otimizada ({cpu_name})", "type": "intel_cpu"})
+    except Exception:
+        pass
+
+    # 2. NVIDIA CUDA
+    if torch.cuda.is_available():
+        devices.append({"id": "0", "name": f"NVIDIA GPU (CUDA {torch.cuda.get_device_name(0)})", "type": "cuda"})
+
+    # 3. CPU PyTorch padrão
+    devices.append({"id": "cpu", "name": "💻 Processador Convencional (CPU Padrão)", "type": "cpu"})
+    return devices
+
+
 def get_default_device() -> str:
     env_device = os.environ.get("YOLO_DEVICE")
     if env_device is not None:
         return env_device
-    if torch.cuda.is_available():
-        return "0"
-    return "cpu"
+    devs = get_available_devices()
+    return devs[0]["id"] if devs else "cpu"
 
 
 DEVICE = get_default_device()
@@ -46,6 +72,11 @@ def ensure_project_directories() -> None:
 def get_available_models() -> list[str]:
     ensure_project_directories()
     models = []
+
+    # Prioriza o best_openvino_model se existir (acelerado para Intel GPU/CPU)
+    ov_model = ROOT_DIR / "best_openvino_model"
+    if ov_model.exists():
+        models.append("best_openvino_model")
 
     # Prioriza o best.pt na raiz ou na pasta models/
     best_root = ROOT_DIR / "best.pt"
@@ -62,7 +93,7 @@ def get_available_models() -> list[str]:
         if rel not in models:
             models.append(rel)
 
-    # Descobre outros modelos .pt na raiz (ex: yolo11m.pt, yolo11n.pt)
+    # Descobre outros modelos .pt na raiz
     for pt in ROOT_DIR.glob("*.pt"):
         if pt.name not in models:
             models.append(pt.name)

@@ -78,6 +78,7 @@ def main() -> None:
     parser.add_argument("--camera", type=int, default=0, help="Índice da webcam (padrão: 0)")
     parser.add_argument("--confidence", type=float, default=CONFIDENCE, help="Confiança mínima (0 a 1)")
     parser.add_argument("--iou", type=float, default=IOU_THRESHOLD, help="Threshold IoU")
+    parser.add_argument("--device", default=DEVICE, help="Dispositivo de execução (intel:gpu, intel:cpu, cpu, 0)")
     parser.add_argument("--no-blur", action="store_true", help="Desativa o desfoque facial de privacidade")
     args = parser.parse_args()
 
@@ -85,8 +86,8 @@ def main() -> None:
         parser.error("--confidence deve estar entre 0 e 1")
 
     logger = get_logger("webcam")
-    logger.info("Carregando modelo %s...", args.weights)
-    model = load_model(args.weights)
+    logger.info("Carregando modelo %s (Dispositivo: %s)...", args.weights, args.device)
+    model = load_model(args.weights, device=args.device)
 
     logger.info("Abrindo câmera índice %d...", args.camera)
     capture = cv2.VideoCapture(args.camera, cv2.CAP_DSHOW if cv2.CAP_DSHOW else 0)
@@ -129,7 +130,7 @@ def main() -> None:
                 fps = 1.0 / max(time_diff, 1e-5)
 
                 result = detect_people(
-                    model, raw_frame, confidence=args.confidence, iou=args.iou, device=DEVICE
+                    model, raw_frame, confidence=args.confidence, iou=args.iou, device=args.device
                 )
                 latency_ms = getattr(result, "inference_latency_ms", 0.0)
                 count = count_people(result)
@@ -144,21 +145,22 @@ def main() -> None:
                     latency_ms=latency_ms,
                     blur_faces=blur_faces,
                     is_paused=is_paused,
-                    device_name=DEVICE,
+                    device_name=args.device,
                 )
                 last_frame_annotated = display_frame
                 last_count = count
                 last_latency = latency_ms
             else:
+                base_frame = last_frame_annotated.copy() if last_frame_annotated is not None else np.zeros((720, 1280, 3), dtype=np.uint8)
                 display_frame = draw_hud(
-                    last_frame_annotated.copy(),
+                    base_frame,
                     count=last_count,
                     peak_count=peak_count,
                     fps=0.0,
                     latency_ms=last_latency,
                     blur_faces=blur_faces,
                     is_paused=True,
-                    device_name=DEVICE,
+                    device_name=args.device,
                 )
 
             cv2.imshow(window_name, display_frame)
@@ -182,7 +184,7 @@ def main() -> None:
         capture.release()
         cv2.destroyAllWindows()
         if peak_count > 0:
-            register_detection(f"Webcam (Cam {args.camera})", "webcam_aovivo", peak_count, args.confidence, device=DEVICE)
+            register_detection(f"Webcam (Cam {args.camera})", "webcam_aovivo", peak_count, args.confidence, device=args.device)
         logger.info("Sessão da webcam finalizada.")
 
 

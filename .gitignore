@@ -24,6 +24,7 @@ Ultralytics/
 Thumbs.db
 *.tmp
 temp/
+kernel.errors.txt
 
 # IDEs
 .vscode/

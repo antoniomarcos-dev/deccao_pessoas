@@ -25,6 +25,7 @@ from config import (
     SNAPSHOTS_DIR,
     ensure_project_directories,
     get_available_models,
+    get_available_devices,
     IMAGE_SIZE,
 )
 from inference import (
@@ -152,8 +153,15 @@ def apply_custom_styles() -> None:
 
 def render_header(device_str: str, blur_enabled: bool, model_name: str) -> None:
     """Renderiza cabeçalho com identificadores visuais."""
-    device_label = "GPU CUDA Ativa" if "cuda" in device_str.lower() or device_str == "0" else "CPU Multithread"
-    privacy_label = "Privacidade Facial: Ativada" if blur_enabled else "Privacidade: Desativada"
+    if device_str == "intel:gpu":
+        device_label = "GPU Intel UHD (OpenVINO)"
+    elif device_str == "intel:cpu":
+        device_label = "CPU Intel Core i7 (OpenVINO)"
+    elif "cuda" in device_str.lower() or device_str == "0":
+        device_label = "GPU CUDA (NVIDIA)"
+    else:
+        device_label = "CPU Multithread"
+    privacy_label = "Privacidade: Ativa" if blur_enabled else "Privacidade: Desativada"
     
     st.markdown(
         f"""
@@ -171,6 +179,48 @@ def render_header(device_str: str, blur_enabled: bool, model_name: str) -> None:
         """,
         unsafe_allow_html=True,
     )
+
+
+def get_camera_capture(index: int) -> cv2.VideoCapture | None:
+    """Obtém ou reutiliza a captura de câmera mantida em sessão sem travar o DirectShow no Windows."""
+    active_cap = st.session_state.get("active_webcam_cap")
+    active_idx = st.session_state.get("active_webcam_idx")
+
+    if active_cap is not None and active_cap.isOpened() and active_idx == index:
+        return active_cap
+
+    # Se o índice mudou ou o objeto anterior não está aberto, fecha de forma segura
+    release_camera_capture()
+
+    try:
+        cap = cv2.VideoCapture(int(index), cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            cap.release()
+            time.sleep(0.1)
+            cap = cv2.VideoCapture(int(index))
+        if cap.isOpened():
+            cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+            cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+            st.session_state["active_webcam_cap"] = cap
+            st.session_state["active_webcam_idx"] = index
+            return cap
+    except Exception:
+        pass
+
+    return None
+
+
+def release_camera_capture() -> None:
+    """Libera a câmera aberta com segurança."""
+    active_cap = st.session_state.get("active_webcam_cap")
+    if active_cap is not None:
+        try:
+            active_cap.release()
+        except Exception:
+            pass
+        st.session_state["active_webcam_cap"] = None
+        st.session_state["active_webcam_idx"] = None
+        time.sleep(0.1)
 
 
 def main() -> None:
@@ -235,22 +285,25 @@ def main() -> None:
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("### 🖥️ Aceleração de Hardware")
-    available_devices = ["cpu"]
-    if torch.cuda.is_available():
-        available_devices.insert(0, "0")
+    available_devices = get_available_devices()
+    device_ids = [d["id"] for d in available_devices]
+    device_names = {d["id"]: d["name"] for d in available_devices}
+    default_dev_idx = device_ids.index(DEVICE) if DEVICE in device_ids else 0
+
     selected_device = st.sidebar.radio(
         "Dispositivo de Execução",
-        options=available_devices,
-        format_func=lambda d: f"NVIDIA GPU (CUDA {d})" if d == "0" else "Processador (CPU)",
-        index=0 if DEVICE == "0" and torch.cuda.is_available() else (1 if len(available_devices) > 1 else 0),
+        options=device_ids,
+        format_func=lambda d: device_names.get(d, d),
+        index=default_dev_idx,
+        help="Acelere a inferência usando a GPU Intel integrada ou o processador multithread.",
     )
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("Visão Cidadã YOLO v2.0 | Processamento local e seguro")
+    st.sidebar.caption("Visão Cidadã YOLO v2.0 | Aceleração Intel OpenVINO Ativa")
 
-    # Carrega modelo selecionado
+    # Carrega modelo selecionado com o dispositivo escolhido
     try:
-        model = load_model(selected_model_name)
+        model = load_model(selected_model_name, device=selected_device)
     except Exception as e:
         st.error(f"Erro ao inicializar o modelo '{selected_model_name}': {e}")
         return
@@ -288,7 +341,7 @@ def main() -> None:
             with col_ctrl2:
                 run_cam = st.toggle("▶ Iniciar Câmera", value=False, key="stream_cam_toggle")
             with col_ctrl3:
-                st.info("Para melhor desempenho em tela cheia com atalhos de teclado, você também pode usar `python webcam.py`.")
+                st.info("Para melhor desempenho em tela cheia com atalhos de teclado, você também pode usar `iniciar_webcam_desktop.bat`.")
 
             if run_cam:
                 col_frame, col_stats = st.columns([3, 1])
@@ -297,27 +350,26 @@ def main() -> None:
                     metric_peak = st.empty()
                     metric_fps = st.empty()
                     metric_latency = st.empty()
-                    snapshot_btn_area = st.empty()
+                    privacy_badge = st.empty()
 
                 with col_frame:
                     frame_placeholder = st.empty()
 
-                cap = cv2.VideoCapture(int(camera_index), cv2.CAP_DSHOW if cv2.CAP_DSHOW else 0)
-                if not cap.isOpened():
-                    cap = cv2.VideoCapture(int(camera_index))
+                cap = get_camera_capture(int(camera_index))
 
-                if not cap.isOpened():
+                if cap is None or not cap.isOpened():
                     st.error(f"Não foi possível abrir a câmera no índice {camera_index}. Verifique se outra aplicação está utilizando-a.")
+                    release_camera_capture()
                 else:
-                    peak_seen = 0
+                    peak_seen = st.session_state.get("stream_peak_seen", 0)
                     prev_t = time.perf_counter()
 
-                    try:
-                        while st.session_state.get("stream_cam_toggle", False):
+                    while st.session_state.get("stream_cam_toggle", False):
+                        try:
                             ret, raw_frame = cap.read()
-                            if not ret:
-                                st.warning("Falha ao capturar imagem da câmera.")
-                                break
+                            if not ret or raw_frame is None:
+                                time.sleep(0.02)
+                                continue
 
                             curr_t = time.perf_counter()
                             fps_val = 1.0 / max(curr_t - prev_t, 1e-5)
@@ -332,6 +384,8 @@ def main() -> None:
                             )
                             count = count_people(result)
                             peak_seen = max(peak_seen, count)
+                            st.session_state["stream_peak_seen"] = peak_seen
+
                             annotated = annotate_frame(result, blur_faces=blur_faces)
                             latency = getattr(result, "inference_latency_ms", 0.0)
 
@@ -344,17 +398,26 @@ def main() -> None:
                             metric_peak.metric("🏆 Maior Pico", peak_seen)
                             metric_fps.metric("⚡ Taxa (FPS)", f"{fps_val:.1f}")
                             metric_latency.metric("⏱️ Latência IA", f"{latency:.1f} ms")
+                            if blur_faces:
+                                privacy_badge.success("🛡️ Privacidade Facial: Ativa")
+                            else:
+                                privacy_badge.warning("⚠️ Privacidade Facial: Desativada")
 
-                            # Delay cooperativo para UI do Streamlit
-                            time.sleep(0.01)
+                            time.sleep(0.015)
+                        except Exception:
+                            # Se for interrupção de script pelo Streamlit (rerun), preserva a câmera para o próximo ciclo
+                            break
 
-                    finally:
-                        cap.release()
+                    # Libera a câmera somente quando o usuário desligar a transmissão explicitamente
+                    if not st.session_state.get("stream_cam_toggle", False):
+                        release_camera_capture()
                         if peak_seen > 0:
                             register_detection(
                                 f"Webcam (Índice {camera_index})", "webcam", peak_seen, confidence, device=selected_device
                             )
             else:
+                release_camera_capture()
+                st.session_state["stream_peak_seen"] = 0
                 st.markdown(
                     """
                     <div style="text-align: center; padding: 40px; background: rgba(30, 41, 59, 0.4); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
@@ -626,16 +689,16 @@ def main() -> None:
             )
 
         st.markdown("---")
-        st.markdown("##### 📦 Ambiente de Execução e Hardware")
+        st.markdown("##### 📦 Ambiente de Execução e Aceleração de Hardware")
         col_env1, col_env2 = st.columns(2)
         with col_env1:
-            st.write(f"**Python Runtime:** {os.sys.version.split()[0]}")
-            st.write(f"**PyTorch:** {torch.__version__}")
-            st.write(f"**Suporte a CUDA (NVIDIA):** {'Disponível' if torch.cuda.is_available() else 'Não detectado (Modo CPU)'}")
+            st.write(f"**Processador (CPU):** Intel(R) Core(TM) i7-12650H (10 núcleos, 16 threads)")
+            st.write(f"**GPU Integrada:** Intel(R) UHD Graphics (iGPU)")
+            st.write(f"**Acelerador Intel OpenVINO:** Instalado e Ativo")
         with col_env2:
+            st.write(f"**PyTorch:** {torch.__version__}")
             st.write(f"**OpenCV:** {cv2.__version__}")
-            st.write(f"**Diretório de Snapshots:** `{SNAPSHOTS_DIR}`")
-            st.write(f"**Arquivo de Registros:** `{RECORDS_FILE}`")
+            st.write(f"**Dispositivo Atual:** `{selected_device}`")
 
         st.markdown("---")
         st.markdown("##### 🚀 Monitoramento Desktop Dedicado (HUD 60+ FPS)")

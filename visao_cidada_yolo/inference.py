@@ -27,12 +27,19 @@ def get_face_cascade() -> cv2.CascadeClassifier | None:
             _FACE_CASCADE = cv2.CascadeClassifier(cascade_path)
     return _FACE_CASCADE
 
-def load_model(weights: str | Path) -> YOLO:
+def load_model(weights: str | Path, device: str = None) -> YOLO:
     weights_str = str(weights)
+    
+    # Se o dispositivo selecionado for Intel GPU/CPU e o modelo OpenVINO existir, redireciona para máxima performance
+    if device and str(device).startswith("intel:"):
+        ov_path = ROOT_DIR / "best_openvino_model"
+        if ov_path.exists():
+            weights_str = "best_openvino_model"
+
     resolved_path = ROOT_DIR / weights_str if not Path(weights_str).is_absolute() else Path(weights_str)
     key = str(resolved_path if resolved_path.exists() else weights_str)
     if key not in _MODEL_CACHE:
-        _MODEL_CACHE[key] = YOLO(key)
+        _MODEL_CACHE[key] = YOLO(key, task="detect")
     return _MODEL_CACHE[key]
 
 def _unwrap_result(result: Any) -> Any:
@@ -57,10 +64,19 @@ def apply_preprocessing(frame, enhance=True):
 
 def detect_people(model, frame, confidence=CONFIDENCE, iou=IOU_THRESHOLD, device=DEVICE, augment: bool = False, max_det: int = 300):
     start_time = time.perf_counter()
+    
+    predict_device = device
+    model_str = str(getattr(model, "model_name", "")) + str(getattr(model, "overrides", {}).get("model", ""))
+    is_openvino = "openvino" in model_str.lower()
+
+    # Se não for modelo OpenVINO e o dispositivo for intel:*, faz fallback seguro para cpu
+    if not is_openvino and str(predict_device).startswith("intel:"):
+        predict_device = "cpu"
+
     results = model.predict(
         source=frame, conf=confidence, iou=iou,
-        classes=[PERSON_CLASS_ID], imgsz=IMAGE_SIZE,
-        device=device, verbose=False, augment=augment, max_det=max_det
+        classes=[PERSON_CLASS_ID], imgsz=640 if is_openvino else IMAGE_SIZE,
+        device=predict_device, verbose=False, augment=augment, max_det=max_det
     )
     latency_ms = (time.perf_counter() - start_time) * 1000.0
     res = results[0]
@@ -203,9 +219,15 @@ def annotate_frame(result, blur_faces=False, show_labels=True, show_conf=True, t
         confs = res.boxes.conf.cpu().numpy() if hasattr(res.boxes.conf, "cpu") else np.array(res.boxes.conf)
         count = len(boxes)
         
+        h_img, w_img = annotated.shape[:2]
         for i in range(count):
             x1, y1, x2, y2 = boxes[i].astype(int)
             conf = float(confs[i])
+            
+            x1 = max(0, min(w_img - 1, x1))
+            y1 = max(0, min(h_img - 1, y1))
+            x2 = max(0, min(w_img - 1, x2))
+            y2 = max(0, min(h_img - 1, y2))
             
             # Color code by confidence
             if conf > 0.7:
@@ -225,8 +247,14 @@ def annotate_frame(result, blur_faces=False, show_labels=True, show_conf=True, t
                 
                 if label:
                     (w, h), _ = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.5, 1)
-                    cv2.rectangle(annotated, (x1, y1 - 20), (x1 + w, y1), color, -1)
-                    cv2.putText(annotated, label, (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1)
+                    label_y1 = max(0, y1 - h - 6)
+                    label_y2 = y1
+                    if y1 - h - 6 < 0:
+                        label_y1 = y1
+                        label_y2 = min(h_img, y1 + h + 6)
+                    cv2.rectangle(annotated, (x1, label_y1), (min(w_img, x1 + w + 6), label_y2), color, -1)
+                    text_y = max(12, label_y2 - 3 if y1 - h - 6 < 0 else y1 - 4)
+                    cv2.putText(annotated, label, (x1 + 3, text_y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv2.LINE_AA)
                     
         if blur_faces:
             annotated = blur_detected_faces(annotated, boxes=boxes)

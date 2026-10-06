@@ -13,3 +13,61 @@ data,horario,origem,tipo,quantidade,confianca_minima,dispositivo
 2026-09-22,21:15:16,Webcam (Índice 0),webcam,3,0.35,cpu
 2026-09-22,21:15:51,273275-11f07100015256a16_jpg.rf.krNn1zcFMvsGv4dn5xEd.jpg,imagem,10,0.35,cpu
 2026-09-22,21:18:12,273275-11f07100015256a16_jpg.rf.krNn1zcFMvsGv4dn5xEd.jpg,imagem,10,0.35,cpu
+2026-09-30,13:05:56,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:05:56,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:06:12,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:06:12,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:06:25,Webcam (Índice 0),webcam,2,0.3,cpu
+2026-09-30,13:06:25,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:06:32,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:06:33,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:06:38,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:06:50,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:07:02,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:07:11,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:07:12,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:07:14,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:07:25,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:07:49,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:07:50,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:08:11,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:08:11,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:08:12,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:08:32,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:08:32,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:08:33,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:11:30,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:11:40,Webcam Snapshot,camera_input,1,0.3,cpu
+2026-09-30,13:11:40,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:11:49,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:11:52,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:12:04,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:12:04,Webcam (Índice 0),webcam,1,0.3,cpu
+2026-09-30,13:12:05,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
+2026-09-30,13:40:44,Webcam (Índice 0),webcam,3,0.3,cpu
+2026-09-30,13:41:04,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,intel:gpu
+2026-09-30,13:47:22,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,22,0.3,intel:gpu
+2026-09-30,13:47:46,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,24,0.2,intel:gpu
+2026-09-30,13:47:49,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,29,0.15,intel:gpu
+2026-09-30,13:47:51,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,63,0.05,intel:gpu
+2026-09-30,13:47:55,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.95,intel:gpu
+2026-09-30,13:47:59,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.9,intel:gpu
+2026-09-30,13:48:01,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.85,intel:gpu
+2026-09-30,13:48:03,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,1,0.8,intel:gpu
+2026-09-30,13:48:05,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,2,0.75,intel:gpu
+2026-09-30,13:48:07,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,4,0.7,intel:gpu
+2026-09-30,13:48:08,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,5,0.65,intel:gpu
+2026-09-30,13:48:09,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,12,0.5,intel:gpu
+2026-09-30,13:48:10,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,14,0.45,intel:gpu
+2026-09-30,13:48:14,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,17,0.4,intel:gpu
+2026-09-30,13:48:17,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,20,0.35,intel:gpu
+2026-09-30,13:48:19,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,16,0.35,intel:gpu
+2026-09-30,13:48:25,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
+2026-09-30,13:48:32,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,11,0.35,intel:gpu
+2026-09-30,13:48:37,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
+2026-09-30,13:48:39,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
+2026-09-30,13:48:42,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
+2026-09-30,13:48:49,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
+2026-09-30,13:49:19,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
+2026-09-30,13:49:34,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,2,0.75,intel:gpu
+2026-09-30,13:49:41,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.9,intel:gpu
