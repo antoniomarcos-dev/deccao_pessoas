@@ -71,3 +71,4 @@ data,horario,origem,tipo,quantidade,confianca_minima,dispositivo
 2026-09-30,13:49:19,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
 2026-09-30,13:49:34,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,2,0.75,intel:gpu
 2026-09-30,13:49:41,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.9,intel:gpu
+2026-10-06,10:44:59,Webcam (Cam 0),webcam_aovivo,3,0.3,intel:gpu

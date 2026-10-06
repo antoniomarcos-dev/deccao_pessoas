@@ -60,3 +60,13 @@
 2026-10-01 13:05:32,491 | INFO | webcam | Carregando modelo best.pt (Dispositivo: intel:gpu)...
 2026-10-01 13:05:32,496 | INFO | webcam | Abrindo câmera índice 0...
 2026-10-01 13:05:33,173 | INFO | webcam | Webcam iniciada com sucesso. Pressione Q na janela para sair.
+2026-10-06 10:43:16,036 | INFO | webcam | Carregando modelo best.pt (Dispositivo: intel:gpu)...
+2026-10-06 10:43:16,050 | INFO | webcam | Abrindo câmera índice 0...
+2026-10-06 10:43:16,901 | INFO | webcam | Webcam iniciada com sucesso. Pressione Q na janela para sair.
+2026-10-06 10:43:32,839 | INFO | webcam | Desfoque facial alternado para: Desligado
+2026-10-06 10:43:44,443 | INFO | webcam | Snapshot salvo em: F:\dec_pessoas\visao_cidada_yolo\logs\snapshots\snapshot_manual_20261006_104344_403.jpg
+2026-10-06 10:43:52,234 | INFO | webcam | Pausa alternada para: True
+2026-10-06 10:43:54,449 | INFO | webcam | Pausa alternada para: False
+2026-10-06 10:43:55,931 | INFO | webcam | Pausa alternada para: True
+2026-10-06 10:43:57,937 | INFO | webcam | Pausa alternada para: False
+2026-10-06 10:44:59,033 | INFO | webcam | Sessão da webcam finalizada.
