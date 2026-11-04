@@ -5,10 +5,12 @@ echo =======================================================
 echo     VISAO CIDADA YOLO - WEBCAM DESKTOP COM HUD
 echo =======================================================
 echo.
-echo Controles da Janela:
-echo [S] Salvar Foto/Snapshot   ^| [B] Alternar Privacidade Facial
-echo [C] Resetar Pico de Pessoas ^| [ESPACO] Congelar/Pausar
-echo [Q] ou [ESC] Encerrar
+echo Controles da Janela em Tempo Real:
+echo [S] Salvar Foto/Snapshot    ^| [B] Privacidade Facial (LGPD)
+echo [D] Modo Alta Densidade     ^| [T] Rastreamento de Pessoas Unicas
+echo [H] Mapa de Calor Termico   ^| [L] Realce Noturno (Low-Light)
+echo [+] / [-] Ajustar Confianca ^| [C] Resetar Pico e Contadores
+echo [ESPACO] Congelar/Pausar    ^| [Q] ou [ESC] Encerrar
 echo.
 cd /d "%~dp0visao_cidada_yolo"
 python webcam.py

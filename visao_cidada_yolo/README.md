@@ -1,6 +1,6 @@
-# Visão Cidadã YOLO
+# Visão Cidadã YOLO v3.0
 
-Sistema profissional de visão computacional para detecção, monitoramento e contagem em tempo real de pessoas em imagens, vídeos e transmissões de webcam, desenvolvido com foco em ética, privacidade e conformidade com a LGPD (anonimização facial por desfoque).
+Sistema profissional de visão computacional para detecção, rastreamento multi-objeto (MOT), análise de densidade ocupacional e contagem em tempo real de pessoas em imagens, vídeos e transmissões de webcam, desenvolvido com foco em ética, privacidade e conformidade estrita com a LGPD.
 
 ---
 
@@ -10,8 +10,8 @@ Sistema profissional de visão computacional para detecção, monitoramento e co
 
 Na pasta raiz do projeto, basta dar um duplo clique em:
 
-- **`iniciar_sistema.bat`**: Abre a interface web profissional completa no navegador.
-- **`iniciar_webcam_desktop.bat`**: Abre o monitoramento via webcam com HUD de alto desempenho.
+- **`iniciar_sistema.bat`**: Abre a interface web profissional completa no navegador (Streamlit).
+- **`iniciar_webcam_desktop.bat`**: Abre o monitoramento dedicado via webcam com HUD de alto desempenho (60+ FPS).
 
 ### 2. Pelo Terminal (PowerShell / Prompt)
 
@@ -22,45 +22,50 @@ python -m streamlit run app.py
 
 ---
 
-## 📷 Modos de Uso da Webcam
+## ⚙️ Arquitetura Back-End Aprimorada
 
-### A. Interface Web (Streamlit)
+1. **Motor de Alta Densidade (Tiling Sobreposto 2x2 + Fusão WBF/NMS + Supressão de Contenção IoA)**:
+   - Divide cenas complexas em sub-regiões sobrepostas (compatível inclusive com modelos estáticos `640x640` do Intel OpenVINO), ampliando pessoas distantes/pequenas em grupos ou multidões e fundindo as caixas delimitadoras ponderadas pela confiança sem duplicações nas bordas.
+2. **Rastreamento Multi-Objeto (`PersonTracker`)**:
+   - Associa detecções entre frames usando IoU + distância de centroide normalizada e predição linear de velocidade.
+   - Calcula **Pessoas Únicas (Fluxo Acumulado)**, **Contagem Estabilizada (Mediana anti-oscilação)**, **Tempo Médio de Permanência (Dwell Time)** e desenha trilhas de deslocamento suaves.
+3. **Mapa de Calor Térmico (`HeatmapAccumulator`)**:
+   - Acumula a ocupação espacial ao longo do tempo (em webcam/vídeos) ou instantaneamente (em fotos), gerando visualização térmica das zonas mais movimentadas.
+4. **Anonimização Facial Estrita e Otimizada (LGPD)**:
+   - Restringe a busca do Haar Cascade aos 45% superiores de cada pessoa detectada (3x a 4x mais rápido e sem falsos positivos) e aplica **Fallback Anatômico de Cabeça** para anonimizar pessoas de perfil, inclinadas ou distantes, antes de renderizar os rótulos visuais.
+5. **Persistência Híbrida Thread-Safe (`SQLite WAL` + `CSV`)**:
+   - Armazena o histórico em banco relacional `logs/visao_cidada.db` sincronizado automaticamente com `logs/detections.csv`, com desduplicação inteligente (cooldown) para evitar registros repetidos em re-renderizações de interface.
+6. **Captura Assíncrona de Baixa Latência (`ThreadedCamera`)**:
+   - Thread daemon dedicada que mantém sempre o quadro mais recente da câmera, eliminando o atraso de buffer do driver OpenCV/DirectShow.
 
-Acesse a aba **"📷 Webcam em Tempo Real"** na aplicação web:
+---
 
-- **Transmissão Contínua**: Exibe o feed da câmera com caixas delimitadoras, contagem ao vivo, pico máximo, taxa de FPS e latência em milissegundos.
-- **Captura Instantânea**: Permite tirar fotos pontuais com a câmera do notebook ou webcam para análise imediata.
+## 📷 Modos de Uso da Webcam e Feira
 
-### B. Módulo Desktop de Alta Performance (`webcam.py`)
-
-Para estações dedicadas que exigem alta taxa de quadros (60+ FPS):
+### A. Módulo Desktop de Alta Performance (`webcam.py`)
 
 ```powershell
-python webcam.py --camera 0 --confidence 0.35
+python webcam.py --camera 0 --confidence 0.30
 ```
 
 **Atalhos do Teclado durante o monitoramento:**
 
+- `[D]`: Ativa / Desativa o **Modo Alta Densidade** (Tiling + Fusão WBF para grupos)
+- `[T]`: Ativa / Desativa o **Rastreamento de Pessoas Únicas** e trilhas de movimento
+- `[H]`: Ativa / Desativa o **Mapa de Calor Térmico** de ocupação
+- `[L]`: Ativa / Desativa o **Realce Noturno (Low-Light CLAHE)**
+- `[B]`: Ativa / Desativa o **Desfoque Facial Estrito (LGPD)**
+- `[+]` / `[-]`: Aumenta / Diminui a sensibilidade (confiança mínima) em tempo real
 - `[S]`: Salva um snapshot anotado em `logs/snapshots/`
-- `[B]`: Ativa / Desativa o desfoque facial de privacidade
-- `[C]`: Zera o contador de pico máximo de pessoas
+- `[C]`: Zera contadores de pico, pessoas únicas e mapa de calor
 - `[ESPAÇO]`: Congela ou retoma o feed da câmera
 - `[Q]` ou `[ESC]`: Encerra a aplicação
 
----
+### B. Modo Demonstração para Feira Unificado (`app.py --feira`)
 
-## 🧠 Modelo de Inteligência Artificial (`best.pt`)
+```powershell
+python app.py --feira --model best.pt --source 0
+```
+*(Ou clique no botão **"🖥️ Abrir Janela Nativa Modo Feira"** diretamente dentro da aba Webcam da interface web)*
 
-O sistema utiliza como modelo base os pesos customizados **`best.pt`**, treinados via Google Colab especificamente para detecção e contagem de alta precisão da classe `pessoa` (ID 0).
-
-- **Pesos Padrão:** `visao_cidada_yolo/best.pt`
-- **Treinamento e Validação:** Realizados em nuvem (Google Colab).
-- **Repositório Local:** Otimizado exclusivamente para execução em tempo real, alta performance de inferência e monitoramento ético.
-
----
-
-## 🛡️ Ética e Privacidade (LGPD)
-
-- **Filtro Exclusivo de Classe:** O modelo processa estritamente a classe `pessoa` (ID 0) do YOLO. Não realiza biometria facial, reconhecimento de identidade ou cruzamento de dados pessoais.
-- **Anonimização Automática:** Desfoque facial por algoritmo de visão computacional ativado por padrão em fotos, vídeos e webcam.
-- **Dados Temporários:** Arquivos de mídia enviados via upload são processados em memória/temporários e descartados ao término da análise.
+Inclui classificação automática de cenário (`AMBIENTE LIVRE`, `INDIVIDUAL`, `EM GRUPO`, `GRUPO GRANDE`, `AGLOMERAÇÃO`), contagem de pessoas únicas e todos os atalhos interativos (`[D]`, `[B]`, `[H]`, `[S]`, `[+/-]`).

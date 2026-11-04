@@ -70,3 +70,4 @@
 2026-10-06 10:43:55,931 | INFO | webcam | Pausa alternada para: True
 2026-10-06 10:43:57,937 | INFO | webcam | Pausa alternada para: False
 2026-10-06 10:44:59,033 | INFO | webcam | Sessão da webcam finalizada.
+2026-11-04 10:58:28,564 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best_openvino_model
