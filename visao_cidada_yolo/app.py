@@ -224,10 +224,9 @@ def run_feira_desktop_mode(
 
 
 def apply_custom_styles() -> None:
-    """Aplica folha de estilos CSS personalizada com proteção contra mutação DOM de tradutores (removeChild fix)."""
-    st.markdown(
+    """Injeta CSS como HTML, sem passar pelo parser de Markdown."""
+    st.html(
         """
-        <meta name="google" content="notranslate">
         <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
@@ -352,8 +351,7 @@ def apply_custom_styles() -> None:
             font-weight: 800;
         }
         </style>
-        """,
-        unsafe_allow_html=True,
+        """
     )
 
 
