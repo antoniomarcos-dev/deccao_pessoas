@@ -1,6 +1,6 @@
-description: Ultralytics YOLO11m model trained on /content/coco_person_1926538a63/person.yaml
+description: Ultralytics YOLO11m model trained on /content/coco_visao_cidada_48087a2acc/person_feira.yaml
 author: Ultralytics
-date: '2026-10-06T10:39:55.011821'
+date: '2026-11-24T10:41:13.213371'
 version: 8.4.36
 license: AGPL-3.0 License (https://ultralytics.com/license)
 docs: https://docs.ultralytics.com
@@ -11,7 +11,7 @@ imgsz:
 - 640
 - 640
 names:
-  0: item
+  0: pessoa
 args:
   batch: 1
   fraction: 1.0

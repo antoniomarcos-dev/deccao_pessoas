@@ -1,74 +1,64 @@
-data,horario,origem,tipo,quantidade,confianca_minima,dispositivo
-2026-09-22,20:42:50,273271-1a51000317893a5_jpg.rf.SqpNlKaY8W8fOL87aRdA.jpg,imagem,0,0.95,cpu
-2026-09-22,20:43:02,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,0,0.95,cpu
-2026-09-22,20:43:05,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,1,0.85,cpu
-2026-09-22,20:43:08,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,11,0.05,cpu
-2026-09-22,20:43:16,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,11,0.05,cpu
-2026-09-22,20:43:32,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
-2026-09-22,20:43:43,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,1,0.15,cpu
-2026-09-22,20:43:45,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
-2026-09-22,20:43:46,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
-2026-09-22,20:43:48,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,0.05,cpu
-2026-09-22,21:04:58,273271-106f1000376a0c4c_jpg.rf.UJVS8HLEiHnIW5kMJFiy.jpg,imagem,10,0.35,cpu
-2026-09-22,21:15:16,Webcam (Índice 0),webcam,3,0.35,cpu
-2026-09-22,21:15:51,273275-11f07100015256a16_jpg.rf.krNn1zcFMvsGv4dn5xEd.jpg,imagem,10,0.35,cpu
-2026-09-22,21:18:12,273275-11f07100015256a16_jpg.rf.krNn1zcFMvsGv4dn5xEd.jpg,imagem,10,0.35,cpu
-2026-09-30,13:05:56,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:05:56,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:06:12,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:06:12,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:06:25,Webcam (Índice 0),webcam,2,0.3,cpu
-2026-09-30,13:06:25,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:06:32,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:06:33,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:06:38,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:06:50,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:07:02,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:07:11,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:07:12,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:07:14,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:07:25,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:07:49,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:07:50,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:08:11,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:08:11,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:08:12,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:08:32,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:08:32,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:08:33,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:11:30,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:11:40,Webcam Snapshot,camera_input,1,0.3,cpu
-2026-09-30,13:11:40,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:11:49,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:11:52,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:12:04,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:12:04,Webcam (Índice 0),webcam,1,0.3,cpu
-2026-09-30,13:12:05,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,cpu
-2026-09-30,13:40:44,Webcam (Índice 0),webcam,3,0.3,cpu
-2026-09-30,13:41:04,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,0.3,intel:gpu
-2026-09-30,13:47:22,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,22,0.3,intel:gpu
-2026-09-30,13:47:46,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,24,0.2,intel:gpu
-2026-09-30,13:47:49,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,29,0.15,intel:gpu
-2026-09-30,13:47:51,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,63,0.05,intel:gpu
-2026-09-30,13:47:55,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.95,intel:gpu
-2026-09-30,13:47:59,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.9,intel:gpu
-2026-09-30,13:48:01,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.85,intel:gpu
-2026-09-30,13:48:03,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,1,0.8,intel:gpu
-2026-09-30,13:48:05,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,2,0.75,intel:gpu
-2026-09-30,13:48:07,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,4,0.7,intel:gpu
-2026-09-30,13:48:08,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,5,0.65,intel:gpu
-2026-09-30,13:48:09,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,12,0.5,intel:gpu
-2026-09-30,13:48:10,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,14,0.45,intel:gpu
-2026-09-30,13:48:14,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,17,0.4,intel:gpu
-2026-09-30,13:48:17,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,20,0.35,intel:gpu
-2026-09-30,13:48:19,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,16,0.35,intel:gpu
-2026-09-30,13:48:25,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
-2026-09-30,13:48:32,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,11,0.35,intel:gpu
-2026-09-30,13:48:37,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
-2026-09-30,13:48:39,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
-2026-09-30,13:48:42,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
-2026-09-30,13:48:49,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
-2026-09-30,13:49:19,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,0.35,intel:gpu
-2026-09-30,13:49:34,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,2,0.75,intel:gpu
-2026-09-30,13:49:41,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0.9,intel:gpu
-2026-10-06,10:44:59,Webcam (Cam 0),webcam_aovivo,3,0.3,intel:gpu
+data,horario,origem,tipo,quantidade,pessoas_unicas,cenario,confianca_minima,confianca_media,latencia_ms,dispositivo,modelo
+2026-09-22,20:42:50,273271-1a51000317893a5_jpg.rf.SqpNlKaY8W8fOL87aRdA.jpg,imagem,0,0,Ambiente Livre,0.95,0.0,0.0,cpu,best.pt
+2026-09-22,20:43:02,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,0,0,Ambiente Livre,0.95,0.0,0.0,cpu,best.pt
+2026-09-22,20:43:05,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,1,1,Individual,0.85,0.0,0.0,cpu,best.pt
+2026-09-22,20:43:08,273275-4cd130000c1cf6f1_jpg.rf.bq9DUJpZd2K3ygdLO1zh.jpg,imagem,11,11,Grupo Grande,0.05,0.0,0.0,cpu,best.pt
+2026-09-22,20:43:32,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,2,Em Grupo,0.05,0.0,0.0,cpu,best.pt
+2026-09-22,20:43:43,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,1,1,Individual,0.15,0.0,0.0,cpu,best.pt
+2026-09-22,20:43:45,273275-1945b0007da295bd_jpg.rf.KCF5AZ2nFj9zATbWGeMT.jpg,imagem,2,2,Em Grupo,0.05,0.0,0.0,cpu,best.pt
+2026-09-22,21:04:58,273271-106f1000376a0c4c_jpg.rf.UJVS8HLEiHnIW5kMJFiy.jpg,imagem,10,10,Grupo Grande,0.35,0.0,0.0,cpu,best.pt
+2026-09-22,21:15:16,Webcam (Índice 0),webcam,3,3,Em Grupo,0.35,0.0,0.0,cpu,best.pt
+2026-09-22,21:15:51,273275-11f07100015256a16_jpg.rf.krNn1zcFMvsGv4dn5xEd.jpg,imagem,10,10,Grupo Grande,0.35,0.0,0.0,cpu,best.pt
+2026-09-30,13:05:56,Webcam (Índice 0),webcam,1,1,Individual,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:06:25,Webcam (Índice 0),webcam,2,2,Em Grupo,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:06:25,Webcam (Índice 0),webcam,1,1,Individual,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:06:50,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,5,Grupo Grande,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:07:49,Webcam (Índice 0),webcam,1,1,Individual,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:07:50,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,5,Grupo Grande,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:08:11,Webcam (Índice 0),webcam,1,1,Individual,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:08:12,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,5,Grupo Grande,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:08:32,Webcam (Índice 0),webcam,1,1,Individual,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:08:33,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,5,Grupo Grande,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:11:40,Webcam Snapshot,camera_input,1,1,Individual,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:11:40,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,5,Grupo Grande,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:12:04,Webcam (Índice 0),webcam,1,1,Individual,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:12:05,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,5,Grupo Grande,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:40:44,Webcam (Índice 0),webcam,3,3,Em Grupo,0.3,0.0,0.0,cpu,best.pt
+2026-09-30,13:41:04,WhatsApp Image 2026-09-26 at 10.48.14.jpeg,imagem,5,5,Grupo Grande,0.3,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:47:22,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,22,22,Aglomeração,0.3,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:47:46,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,24,24,Aglomeração,0.2,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:47:49,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,29,29,Aglomeração,0.15,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:47:51,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,63,63,Aglomeração,0.05,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:47:55,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0,Ambiente Livre,0.95,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:47:59,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0,Ambiente Livre,0.9,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:01,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0,Ambiente Livre,0.85,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:03,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,1,1,Individual,0.8,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:05,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,2,2,Em Grupo,0.75,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:07,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,4,4,Em Grupo,0.7,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:08,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,5,5,Grupo Grande,0.65,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:09,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,12,12,Grupo Grande,0.5,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:10,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,14,14,Aglomeração,0.45,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:14,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,17,17,Aglomeração,0.4,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:17,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,20,20,Aglomeração,0.35,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:19,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,16,16,Aglomeração,0.35,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:25,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,48,Aglomeração,0.35,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:32,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,11,11,Grupo Grande,0.35,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:48:37,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,48,48,Aglomeração,0.35,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:49:34,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,2,2,Em Grupo,0.75,0.0,0.0,intel:gpu,best.pt
+2026-09-30,13:49:41,WhatsApp Image 2026-07-21 at 09.17.02.jpeg,imagem,0,0,Ambiente Livre,0.9,0.0,0.0,intel:gpu,best.pt
+2026-10-06,10:44:59,Webcam (Cam 0),webcam_aovivo,3,3,Em Grupo,0.3,0.0,0.0,intel:gpu,best.pt
+2026-11-04,13:05:21,ColheAI_Foto_Original_Sem_Recriacao.png,imagem,6,6,Grupo Grande,0.3,0.8808,483.4,intel:cpu,best (2).pt
+2026-11-04,13:05:46,ColheAI_Foto_Original_Sem_Recriacao.png,imagem,6,6,Grupo Grande,0.3,0.955,3316.6,intel:cpu,best (2).pt
+2026-11-04,13:05:57,ColheAI_Foto_Original_Sem_Recriacao.png,imagem,9,9,Grupo Grande,0.3,0.832,3029.3,intel:cpu,best (2).pt
+2026-11-04,13:06:05,ColheAI_Foto_Original_Sem_Recriacao.png,imagem,6,6,Grupo Grande,0.3,0.955,2990.5,intel:cpu,best (2).pt
+2026-11-04,13:06:33,FICCA-sebrae-29-10-2026-fredoxcarvalho-267.jpg,imagem,21,21,Aglomeração,0.3,0.8565,2721.9,intel:cpu,best (2).pt
+2026-11-04,13:07:29,FICCA-sebrae-29-10-2026-fredoxcarvalho-267.jpg,imagem,20,20,Aglomeração,0.3,0.7861,387.2,intel:cpu,best (2).pt
+2026-11-04,13:09:33,Feira (1),feira_aovivo,1,1,Individual,0.3,0.0,0.0,intel:cpu,best (2).pt
+2026-11-10,21:39:27,1000_F_116736079_fwLPYWGzBJAjmhg6AKuGS0yfiNIQ3tWY.jpg,imagem,5,5,Grupo Grande,0.3,0.8866,8701.2,intel:gpu,best_openvino_model
+2026-11-10,21:39:54,1000_F_116736079_fwLPYWGzBJAjmhg6AKuGS0yfiNIQ3tWY.jpg,imagem,5,5,Grupo Grande,0.3,0.8904,180.2,intel:gpu,best_openvino_model
+2026-11-10,21:40:15,1000_F_116736079_fwLPYWGzBJAjmhg6AKuGS0yfiNIQ3tWY.jpg,imagem,5,5,Grupo Grande,0.3,0.886,1180.5,intel:cpu,best_openvino_model
+2026-11-24,10:27:47,Webcam Snapshot,camera_input,1,1,Individual,0.3,0.878,278.3,intel:cpu,best.pt
+2026-11-24,10:28:54,Webcam Snapshot,camera_input,1,1,Individual,0.3,0.9231,404.4,intel:cpu,best (2).pt
+2026-11-24,10:29:04,Webcam Snapshot,camera_input,1,1,Individual,0.3,0.9029,337.3,intel:cpu,best (2).pt
+2026-11-24,10:29:14,Webcam Snapshot,camera_input,1,1,Individual,0.3,0.9029,334.6,intel:cpu,best (2).pt
+2026-11-24,10:31:21,Feira (1),feira_aovivo,1,1,Individual,0.3,0.0,0.0,intel:cpu,best (2).pt

@@ -71,3 +71,14 @@
 2026-10-06 10:43:57,937 | INFO | webcam | Pausa alternada para: False
 2026-10-06 10:44:59,033 | INFO | webcam | Sessão da webcam finalizada.
 2026-11-04 10:58:28,564 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best_openvino_model
+2026-11-04 13:02:09,189 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best_openvino_model
+2026-11-04 13:02:16,409 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best (2).pt
+2026-11-04 13:08:23,422 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best (2).pt
+2026-11-10 21:22:25,889 | INFO | inference | Inicializando modelo YOLO a partir de: E:\dec_pessoas\visao_cidada_yolo\best_openvino_model
+2026-11-10 21:25:34,099 | INFO | inference | Inicializando modelo YOLO a partir de: E:\dec_pessoas\visao_cidada_yolo\best_openvino_model
+2026-11-10 21:38:54,248 | INFO | inference | Inicializando modelo YOLO a partir de: E:\dec_pessoas\visao_cidada_yolo\best_openvino_model
+2026-11-10 21:39:06,156 | INFO | inference | Inicializando modelo YOLO a partir de: E:\dec_pessoas\visao_cidada_yolo\best (2).pt
+2026-11-24 10:25:34,680 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best_openvino_model
+2026-11-24 10:26:40,911 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best (2).pt
+2026-11-24 10:29:57,460 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best (2).pt
+2026-11-24 10:41:17,817 | INFO | inference | Inicializando modelo YOLO a partir de: F:\dec_pessoas\visao_cidada_yolo\best_openvino_model

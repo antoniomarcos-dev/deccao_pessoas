@@ -47,18 +47,15 @@ def draw_hud(
     h, w = frame.shape[:2]
     overlay = frame.copy()
 
-    # Barra superior e barra inferior translúcidas
     cv2.rectangle(overlay, (0, 0), (w, 58), (15, 20, 28), -1)
     cv2.rectangle(overlay, (0, h - 38), (w, h), (12, 15, 22), -1)
     cv2.addWeighted(overlay, 0.78, frame, 0.22, 0, frame)
 
     short_scen, _, scen_color, _, _ = classify_scenario(count)
 
-    # 1. Pessoas Agora + Cenário
     count_color = (0, 235, 120) if count > 0 else (180, 180, 180)
     cv2.putText(frame, f"AGORA: {count}", (16, 36), cv2.FONT_HERSHEY_DUPLEX, 0.80, count_color, 2, cv2.LINE_AA)
 
-    # 2. Pico & Pessoas Únicas
     cv2.putText(
         frame,
         f"PICO: {peak_count} | UNICAS: {unique_count}",
@@ -70,7 +67,6 @@ def draw_hud(
         cv2.LINE_AA,
     )
 
-    # 3. Cenário Classificado
     cv2.putText(
         frame,
         f"[{short_scen.upper()}]",
@@ -82,12 +78,10 @@ def draw_hud(
         cv2.LINE_AA,
     )
 
-    # 4. FPS, Latência e Confiança
     fps_color = (0, 220, 255) if fps >= 15 else (0, 140, 255)
     perf_str = f"{fps:.1f} FPS | {latency_ms:.0f}ms | Conf:{confidence:.2f}"
     cv2.putText(frame, perf_str, (705, 36), cv2.FONT_HERSHEY_SIMPLEX, 0.55, fps_color, 2, cv2.LINE_AA)
 
-    # 5. Badges de Modo no canto direito
     modes = []
     if blur_faces:
         modes.append("LGPD:ON")
@@ -102,7 +96,6 @@ def draw_hud(
     (mw, _), _ = cv2.getTextSize(mode_str, cv2.FONT_HERSHEY_SIMPLEX, 0.50, 1)
     cv2.putText(frame, mode_str, (max(980, w - mw - 16), 35), cv2.FONT_HERSHEY_SIMPLEX, 0.50, mode_color, 1, cv2.LINE_AA)
 
-    # 6. Indicador de Pausa
     if is_paused:
         cv2.rectangle(frame, (w // 2 - 140, h // 2 - 32), (w // 2 + 140, h // 2 + 32), (0, 0, 180), -1)
         cv2.putText(
@@ -116,7 +109,6 @@ def draw_hud(
             cv2.LINE_AA,
         )
 
-    # 7. Barra inferior: Atalhos
     shortcuts = (
         "[S] Foto | [B] LGPD | [D] Alta Densidade | [T] Rastreio | [H] Calor | [L] Luz | [+/-] Conf | [C] Reset | [ESPACO] Pausa | [Q] Sair"
     )
@@ -166,9 +158,9 @@ def main() -> None:
     is_paused = False
     prev_time = time.perf_counter()
     fps_ema = 0.0
+    lat_ema = 0.0
     last_frame_annotated: np.ndarray | None = None
     last_count = 0
-    last_latency = 0.0
     conf_history: list[float] = []
     lat_history: list[float] = []
 
@@ -186,7 +178,7 @@ def main() -> None:
                 time_diff = max(curr_time - prev_time, 1e-5)
                 prev_time = curr_time
                 inst_fps = 1.0 / time_diff
-                fps_ema = inst_fps if fps_ema == 0.0 else (0.15 * inst_fps + 0.85 * fps_ema)
+                fps_ema = inst_fps if fps_ema == 0.0 else (0.18 * inst_fps + 0.82 * fps_ema)
 
                 proc_frame = apply_preprocessing(raw_frame, enhance=True) if low_light_on else raw_frame
                 result = detect_people(
@@ -196,11 +188,13 @@ def main() -> None:
                     iou=args.iou,
                     device=args.device,
                     high_density=high_density,
+                    fast_stream_mode=True,
                 )
                 result.orig_img = raw_frame
 
-                latency_ms = float(getattr(result, "inference_latency_ms", 0.0))
-                lat_history.append(latency_ms)
+                raw_lat = float(getattr(result, "inference_latency_ms", 0.0))
+                lat_ema = raw_lat if lat_ema == 0.0 else (0.25 * raw_lat + 0.75 * lat_ema)
+                lat_history.append(raw_lat)
                 count = count_people(result)
                 peak_count = max(peak_count, count)
 
@@ -218,7 +212,7 @@ def main() -> None:
                     blur_faces=blur_faces,
                     tracks=active_tracks,
                     heatmap=heatmap_acc if heatmap_on else None,
-                    show_trails=tracking_on,
+                    show_trails=False,
                 )
 
                 unique_val = max(peak_count, tracker.unique_people_count) if tracking_on else peak_count
@@ -228,7 +222,7 @@ def main() -> None:
                     unique_count=unique_val,
                     peak_count=peak_count,
                     fps=fps_ema,
-                    latency_ms=latency_ms,
+                    latency_ms=lat_ema,
                     confidence=conf_thresh,
                     blur_faces=blur_faces,
                     high_density=high_density,
@@ -239,7 +233,6 @@ def main() -> None:
                 )
                 last_frame_annotated = annotated
                 last_count = count
-                last_latency = latency_ms
             else:
                 base_frame = (
                     last_frame_annotated.copy()
@@ -253,7 +246,7 @@ def main() -> None:
                     unique_count=unique_val,
                     peak_count=peak_count,
                     fps=0.0,
-                    latency_ms=last_latency,
+                    latency_ms=lat_ema,
                     confidence=conf_thresh,
                     blur_faces=blur_faces,
                     high_density=high_density,

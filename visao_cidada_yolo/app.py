@@ -2,12 +2,7 @@
 Visão Cidadã YOLO - Aplicativo Unificado (Interface Web Streamlit + Modo Demonstração Feira Desktop).
 Conecta a interface web e o modo de demonstração em tela cheia ao motor Back-End de Alta Performance
 (OpenVINO/PyTorch, Tiling Multi-Escala WBF, Rastreamento Multi-Objeto, Mapa de Calor e SQLite/CSV).
-
-Modos de execução:
-  1. Interface Web Completa:
-     python -m streamlit run app.py
-  2. Modo Demonstração Feira (Janela OpenCV de Alta Performance):
-     python app.py --feira --model best.pt --source 0
+Otimizado para eliminar falhas de reconciliação DOM (React removeChild) e rodar com fluidez em notebooks Intel Core i7 + UHD Graphics.
 """
 
 from __future__ import annotations
@@ -26,7 +21,6 @@ import cv2
 import numpy as np
 import pandas as pd
 import streamlit as st
-import torch
 
 from config import (
     CONFIDENCE,
@@ -78,8 +72,7 @@ def run_feira_desktop_mode(
     blur_init: bool = False,
 ) -> None:
     """
-    Executa o Modo Demonstração Feira em janela nativa OpenCV de alta taxa de quadros,
-    unificando o antigo `app_feira_visao_cidada.py` dentro do `app.py`.
+    Executa o Modo Demonstração Feira em janela nativa OpenCV de alta taxa de quadros.
     """
     model = load_model(model_name, device=device)
     src = int(source) if str(source).isdigit() else source
@@ -135,6 +128,7 @@ def run_feira_desktop_mode(
                 device=device,
                 high_density=alta_densidade,
                 max_det=500,
+                fast_stream_mode=True,
             )
 
             has_boxes = res.boxes is not None and len(res.boxes) > 0
@@ -145,7 +139,7 @@ def run_feira_desktop_mode(
             status_txt, cor = classificar_cenario(qtd)
 
             now = time.perf_counter()
-            tracks = tracker.update(boxes, scores, timestamp=now)
+            tracker.update(boxes, scores, timestamp=now)
             heatmap_acc.update(frame.shape, boxes)
 
             if blur_lgpd:
@@ -154,15 +148,10 @@ def run_feira_desktop_mode(
             if heatmap_on:
                 frame = heatmap_acc.render_overlay(frame)
 
-            for trk in tracks:
-                if len(trk.trajectory) >= 2:
-                    pts = np.array(trk.trajectory, dtype=np.int32).reshape((-1, 1, 2))
-                    cv2.polylines(frame, [pts], False, (255, 200, 0), 2, cv2.LINE_AA)
-
             for box, sc in zip(boxes, scores):
                 x1, y1, x2, y2 = map(int, box)
                 cv2.rectangle(frame, (x1, y1), (x2, y2), cor, 2, cv2.LINE_AA)
-                lbl = f"pessoa {sc:.2f}"
+                lbl = f"pessoa {sc * 100:.0f}%"
                 (tw, th), _ = cv2.getTextSize(lbl, cv2.FONT_HERSHEY_SIMPLEX, 0.58, 2)
                 y_lbl = max(y1, th + 8)
                 cv2.rectangle(frame, (x1, y_lbl - th - 6), (x1 + tw + 8, y_lbl), cor, -1)
@@ -235,18 +224,17 @@ def run_feira_desktop_mode(
 
 
 def apply_custom_styles() -> None:
-    """Aplica folha de estilos CSS personalizada para uma interface de nível empresarial."""
+    """Aplica folha de estilos CSS personalizada com proteção contra mutação DOM de tradutores (removeChild fix)."""
     st.markdown(
         """
+        <meta name="google" content="notranslate">
         <style>
-        /* Estilos Globais e Tipografia */
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
         
         html, body, [class*="css"] {
             font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* Top Header & Badges */
         .app-header {
             display: flex;
             align-items: center;
@@ -297,37 +285,30 @@ def apply_custom_styles() -> None:
             border: 1px solid rgba(168, 85, 247, 0.3);
         }
 
-        /* Cards de Métricas */
         .metric-card {
             background: rgba(30, 41, 59, 0.7);
             backdrop-filter: blur(12px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 14px;
-            padding: 1.2rem;
+            padding: 1.1rem;
             text-align: center;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-        .metric-card:hover {
-            border-color: rgba(56, 189, 248, 0.4);
-            transform: translateY(-2px);
         }
         .metric-val {
-            font-size: 2.0rem;
+            font-size: 1.9rem;
             font-weight: 800;
             color: #F8FAFC;
             line-height: 1.1;
         }
         .metric-label {
-            font-size: 0.78rem;
+            font-size: 0.75rem;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: #94A3B8;
-            margin-top: 0.4rem;
+            margin-top: 0.35rem;
         }
 
-        /* Banner Dinâmico de Cenário (Modo Feira) */
         .scenario-banner {
             padding: 0.75rem 1.2rem;
             border-radius: 12px;
@@ -340,6 +321,36 @@ def apply_custom_styles() -> None:
             background: rgba(15, 23, 42, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.12);
         }
+
+        /* Painel Lateral Unificado de Stream (Evita mutação de múltiplos nós React DOM) */
+        .live-stats-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 14px;
+        }
+        .live-stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: rgba(30, 41, 59, 0.65);
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .live-stat-title {
+            font-size: 0.82rem;
+            color: #94A3B8;
+            font-weight: 600;
+        }
+        .live-stat-num {
+            font-size: 1.35rem;
+            color: #F8FAFC;
+            font-weight: 800;
+        }
         </style>
         """,
         unsafe_allow_html=True,
@@ -351,7 +362,7 @@ def render_header(device_str: str, blur_enabled: bool, model_name: str, high_den
     if device_str == "intel:gpu":
         device_label = "GPU Intel UHD (OpenVINO)"
     elif device_str == "intel:cpu":
-        device_label = "CPU Intel Otimizada (OpenVINO)"
+        device_label = "CPU Intel Core i7 (OpenVINO)"
     elif "cuda" in device_str.lower() or device_str == "0":
         device_label = "GPU CUDA (NVIDIA)"
     else:
@@ -361,7 +372,7 @@ def render_header(device_str: str, blur_enabled: bool, model_name: str, high_den
 
     st.markdown(
         f"""
-        <div class="app-header">
+        <div class="app-header notranslate" translate="no">
             <div>
                 <h1 class="app-title">Visão Cidadã YOLO</h1>
                 <div class="app-subtitle">Motor Inteligente de Contagem, Rastreamento de Fluxo e Densidade Ocupacional</div>
@@ -382,15 +393,69 @@ def render_scenario_banner(count: int, unique_count: int | None = None) -> str:
     _, full_lbl, _, hex_color, _ = classify_scenario(count)
     uniq_str = f" &nbsp;|&nbsp; Fluxo Único: {unique_count}" if unique_count is not None else ""
     return (
-        f'<div class="scenario-banner" style="border-left: 6px solid {hex_color};">'
+        f'<div class="scenario-banner notranslate" translate="no" style="border-left: 6px solid {hex_color};">'
         f'<span style="color: {hex_color};">📌 CENÁRIO: {full_lbl}</span>'
         f'<span style="color: #CBD5E1; font-size: 0.9rem;">Ocupação Instantânea: {count}{uniq_str}</span>'
         f'</div>'
     )
 
 
+def render_live_stats_html(
+    count: int,
+    unique_val: int,
+    peak_seen: int,
+    short_scen: str,
+    hex_color: str,
+    fps_ema: float,
+    lat_ema: float,
+    blur_faces: bool,
+) -> str:
+    """
+    Renderiza todas as métricas da transmissão em um único bloco HTML estável (`notranslate`),
+    eliminando colisões de `removeChild` no React DOM do Streamlit.
+    """
+    lgpd_bg = "rgba(16, 185, 129, 0.16)" if blur_faces else "rgba(245, 158, 11, 0.16)"
+    lgpd_col = "#34D399" if blur_faces else "#FBBF24"
+    lgpd_txt = "🛡️ Privacidade LGPD: Ativa" if blur_faces else "⚠️ Privacidade LGPD: Desativada"
+
+    return f"""
+    <div class="live-stats-panel notranslate" translate="no">
+        <div class="live-stat-row" style="border-left: 4px solid {hex_color};">
+            <span class="live-stat-title">📌 Cenário Atual</span>
+            <span class="live-stat-num" style="color: {hex_color}; font-size: 1.1rem;">{short_scen}</span>
+        </div>
+        <div class="live-stat-row">
+            <span class="live-stat-title">👥 Pessoas Agora</span>
+            <span class="live-stat-num">{count}</span>
+        </div>
+        <div class="live-stat-row">
+            <span class="live-stat-title">🚶 Pessoas Únicas (Fluxo)</span>
+            <span class="live-stat-num">{unique_val}</span>
+        </div>
+        <div class="live-stat-row">
+            <span class="live-stat-title">🏆 Maior Pico</span>
+            <span class="live-stat-num">{peak_seen}</span>
+        </div>
+        <div class="live-stat-row">
+            <span class="live-stat-title">⚡ Taxa (FPS)</span>
+            <span class="live-stat-num" style="color: #38BDF8;">{fps_ema:.1f}</span>
+        </div>
+        <div class="live-stat-row">
+            <span class="live-stat-title">⏱️ Latência IA</span>
+            <span class="live-stat-num" style="font-size: 1.15rem;">{lat_ema:.1f} ms</span>
+        </div>
+        <div style="padding: 10px 12px; border-radius: 10px; background: {lgpd_bg}; color: {lgpd_col}; font-weight: 700; font-size: 0.85rem; text-align: center;">
+            {lgpd_txt}
+        </div>
+    </div>
+    """
+
+
 def get_camera_capture(index: int) -> ThreadedCamera | None:
-    """Obtém ou reutiliza o leitor de câmera assíncrono em thread dedicada sem travar o DirectShow."""
+    """
+    Obtém ou reutiliza o leitor de câmera assíncrono em thread dedicada.
+    Usa resolução 960x540 (qHD 16:9) para transmissão fluida sem gargalo de WebSocket no navegador.
+    """
     active_cap: ThreadedCamera | None = st.session_state.get("active_webcam_cap")
     active_idx = st.session_state.get("active_webcam_idx")
 
@@ -400,7 +465,7 @@ def get_camera_capture(index: int) -> ThreadedCamera | None:
     release_camera_capture()
 
     try:
-        cam = ThreadedCamera(source=int(index), width=1280, height=720).start()
+        cam = ThreadedCamera(source=int(index), width=960, height=540).start()
         if cam.isOpened():
             st.session_state["active_webcam_cap"] = cam
             st.session_state["active_webcam_idx"] = index
@@ -442,7 +507,7 @@ def main() -> None:
         "Pesos do Modelo (YOLO)",
         options=available_models,
         index=0,
-        help="Selecione os pesos pré-treinados ou exportados (OpenVINO / PyTorch).",
+        help="Modelo oficial mais treinado (mAP50: 79.2%) com aceleração OpenVINO.",
     )
 
     confidence = st.sidebar.slider(
@@ -478,7 +543,7 @@ def main() -> None:
     blur_faces = st.sidebar.toggle(
         "🛡️ Desfoque Facial Estrito (LGPD)",
         value=True,
-        help="Anonimiza rostos frontais e regiões de cabeça em perfil/distância para conformidade total com a LGPD.",
+        help="Anonimiza rostos frontais e close-ups de webcam com detecção adaptativa para conformidade total com a LGPD.",
     )
 
     feira_color_mode = st.sidebar.toggle(
@@ -490,7 +555,7 @@ def main() -> None:
     high_density_global = st.sidebar.toggle(
         "🔍 Modo Alta Densidade (Grupos/Multidões)",
         value=False,
-        help="Ativa inferência em sub-regiões sobrepostas (Tiling SAHI-like + Fusão WBF) para detectar pessoas pequenas ou ao fundo.",
+        help="Ativa inferência em sub-regiões sobrepostas (Tiling + Fusão WBF) para detectar pessoas pequenas ao fundo.",
     )
 
     heatmap_enabled = st.sidebar.toggle(
@@ -502,7 +567,7 @@ def main() -> None:
     low_light_prep = st.sidebar.toggle(
         "🌙 Realce Low-Light (CLAHE)",
         value=False,
-        help="Aplica equalização adaptativa no espaço LAB para melhorar detecção em ambientes escuros ou contra-luz.",
+        help="Aplica equalização adaptativa no espaço LAB para melhorar detecção em ambientes escuros.",
     )
 
     st.sidebar.markdown("---")
@@ -517,11 +582,11 @@ def main() -> None:
         options=device_ids,
         format_func=lambda d: device_names.get(d, d),
         index=default_dev_idx,
-        help="Acelere a inferência usando GPU/CPU Intel OpenVINO ou PyTorch Multithread.",
+        help="Acelere a inferência usando a GPU Intel UHD integrada (OpenVINO) ou o processador Intel Core i7.",
     )
 
     st.sidebar.markdown("---")
-    st.sidebar.caption("Visão Cidadã YOLO v3.0 | App & Feira Unificados")
+    st.sidebar.caption("Visão Cidadã YOLO v3.2 | Otimizado para Intel Core i7 + UHD Graphics")
 
     try:
         model = load_model(selected_model_name, device=selected_device)
@@ -561,7 +626,7 @@ def main() -> None:
             with col_ctrl2:
                 run_cam = st.toggle("▶ Iniciar Câmera Web", value=False, key="stream_cam_toggle")
             with col_ctrl3:
-                if st.button("🖥️ Abrir Janela Nativa Modo Feira (Tela Cheia 60+ FPS)"):
+                if st.button("🖥️ Abrir Janela Nativa Modo Feira (Tela Cheia)"):
                     release_camera_capture()
                     cmd = [
                         sys.executable,
@@ -586,19 +651,11 @@ def main() -> None:
                     st.toast("Janela nativa Modo Feira iniciada! Use [D], [B], [H], [S] ou [Q] na janela de vídeo.", icon="🚀")
 
             if run_cam:
-                scenario_placeholder = st.empty()
                 col_frame, col_stats = st.columns([3, 1])
-                with col_stats:
-                    metric_people = st.empty()
-                    metric_unique = st.empty()
-                    metric_peak = st.empty()
-                    metric_scenario = st.empty()
-                    metric_fps = st.empty()
-                    metric_latency = st.empty()
-                    privacy_badge = st.empty()
-
                 with col_frame:
                     frame_placeholder = st.empty()
+                with col_stats:
+                    stats_placeholder = st.empty()
 
                 cap = get_camera_capture(int(camera_index))
 
@@ -616,6 +673,8 @@ def main() -> None:
                     peak_seen = st.session_state.get("stream_peak_seen", 0)
                     prev_t = time.perf_counter()
                     fps_ema = 0.0
+                    lat_ema = 0.0
+                    last_stats_update = 0.0
 
                     while st.session_state.get("stream_cam_toggle", False):
                         try:
@@ -627,7 +686,7 @@ def main() -> None:
                             curr_t = time.perf_counter()
                             inst_fps = 1.0 / max(curr_t - prev_t, 1e-5)
                             prev_t = curr_t
-                            fps_ema = inst_fps if fps_ema == 0.0 else (0.2 * inst_fps + 0.8 * fps_ema)
+                            fps_ema = inst_fps if fps_ema == 0.0 else (0.18 * inst_fps + 0.82 * fps_ema)
 
                             proc_frame = apply_preprocessing(raw_frame) if low_light_prep else raw_frame
 
@@ -639,11 +698,15 @@ def main() -> None:
                                 device=selected_device,
                                 max_det=max_det,
                                 high_density=high_density_global,
+                                fast_stream_mode=True,
                             )
                             result.orig_img = raw_frame
                             count = count_people(result)
                             peak_seen = max(peak_seen, count)
                             st.session_state["stream_peak_seen"] = peak_seen
+
+                            raw_lat = float(getattr(result, "inference_latency_ms", 0.0))
+                            lat_ema = raw_lat if lat_ema == 0.0 else (0.25 * raw_lat + 0.75 * lat_ema)
 
                             has_boxes = getattr(result, "boxes", None) is not None and len(result.boxes) > 0
                             boxes_np = result.boxes.xyxy.cpu().numpy() if has_boxes else np.empty((0, 4), dtype=np.float32)
@@ -657,29 +720,33 @@ def main() -> None:
                                 blur_faces=blur_faces,
                                 tracks=active_tracks,
                                 heatmap=heatmap_acc if heatmap_enabled else None,
+                                show_trails=False,
                                 color_by_scenario=feira_color_mode,
                             )
-                            latency = getattr(result, "inference_latency_ms", 0.0)
-                            short_scen, _, _, _, _ = classify_scenario(count)
+                            short_scen, _, _, hex_color, _ = classify_scenario(count)
                             unique_val = max(peak_seen, tracker.unique_people_count)
-
-                            scenario_placeholder.markdown(render_scenario_banner(count, unique_val), unsafe_allow_html=True)
 
                             frame_rgb = cv2.cvtColor(annotated, cv2.COLOR_BGR2RGB)
                             frame_placeholder.image(frame_rgb, channels="RGB", use_container_width=True)
 
-                            metric_people.metric("👥 Pessoas Agora", count)
-                            metric_unique.metric("🚶 Pessoas Únicas (Fluxo)", unique_val)
-                            metric_peak.metric("🏆 Maior Pico", peak_seen)
-                            metric_scenario.metric("📌 Cenário", short_scen)
-                            metric_fps.metric("⚡ Taxa (FPS)", f"{fps_ema:.1f}")
-                            metric_latency.metric("⏱️ Latência IA", f"{latency:.1f} ms")
-                            if blur_faces:
-                                privacy_badge.success("🛡️ Privacidade LGPD: Ativa")
-                            else:
-                                privacy_badge.warning("⚠️ Privacidade LGPD: Desativada")
+                            # Atualiza painel lateral de métricas a 4 Hz (evita sobrecarga React DOM / removeChild)
+                            if (curr_t - last_stats_update) >= 0.22:
+                                last_stats_update = curr_t
+                                stats_placeholder.markdown(
+                                    render_live_stats_html(
+                                        count=count,
+                                        unique_val=unique_val,
+                                        peak_seen=peak_seen,
+                                        short_scen=short_scen,
+                                        hex_color=hex_color,
+                                        fps_ema=fps_ema,
+                                        lat_ema=lat_ema,
+                                        blur_faces=blur_faces,
+                                    ),
+                                    unsafe_allow_html=True,
+                                )
 
-                            time.sleep(0.01)
+                            time.sleep(0.012)
                         except Exception:
                             break
 
@@ -694,6 +761,7 @@ def main() -> None:
                                 confidence,
                                 device=selected_device,
                                 unique_people=unique_final,
+                                latency_ms=lat_ema,
                                 model_name=selected_model_name,
                             )
             else:
@@ -705,7 +773,7 @@ def main() -> None:
                     st.session_state["stream_heatmap"].reset()
                 st.markdown(
                     """
-                    <div style="text-align: center; padding: 40px; background: rgba(30, 41, 59, 0.4); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
+                    <div class="notranslate" translate="no" style="text-align: center; padding: 40px; background: rgba(30, 41, 59, 0.4); border-radius: 12px; border: 2px dashed rgba(255,255,255,0.1);">
                         <p style="font-size: 1.1rem; color: #94A3B8; margin: 0;">A câmera está em espera. Ative <b>'▶ Iniciar Câmera Web'</b> para assistir no navegador ou clique em <b>'🖥️ Abrir Janela Nativa Modo Feira'</b> para demonstração em tela cheia.</p>
                     </div>
                     """,
@@ -791,7 +859,6 @@ def main() -> None:
                 help="Formatos de imagem suportados: JPG, PNG, WEBP. Vídeos: MP4, AVI, MOV, MKV.",
             )
         with col_m2:
-            st.markdown("<br>", unsafe_allow_html=True)
             tta_enabled = st.toggle(
                 "Modo Precisão Máxima (Tiling + Multi-Escala WBF)",
                 value=high_density_global,
@@ -906,7 +973,7 @@ def main() -> None:
                     skip_frames = st.selectbox(
                         "Amostragem de Frames",
                         [1, 2, 3, 5],
-                        index=0,
+                        index=1,
                         format_func=lambda x: f"Processar cada {x}º frame" if x > 1 else "Todos os frames (1x)",
                     )
                 with col_vopt3:
@@ -927,18 +994,17 @@ def main() -> None:
 
                     try:
                         progress_bar = st.progress(0, text="Preparando vídeo...")
-                        vid_scen_placeholder = st.empty()
-                        video_placeholder = st.empty()
-                        stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
-                        p_cur = stat_col1.empty()
-                        p_uniq = stat_col2.empty()
-                        p_max = stat_col3.empty()
-                        p_fps = stat_col4.empty()
+                        v_col_frame, v_col_stats = st.columns([3, 1])
+                        with v_col_frame:
+                            video_placeholder = st.empty()
+                        with v_col_stats:
+                            v_stats_placeholder = st.empty()
 
                         max_in_video = 0
                         unique_in_video = 0
                         history_counts: list[int] = []
                         history_stabilized: list[int] = []
+                        last_v_ui_update = 0.0
 
                         gen = process_video(
                             model=model,
@@ -964,23 +1030,31 @@ def main() -> None:
                             history_counts.append(count)
                             history_stabilized.append(extra["stabilized_count"])
 
-                            if idx % (2 * skip_frames) == 0 or idx == total:
-                                vid_scen_placeholder.markdown(
-                                    render_scenario_banner(count, unique_in_video),
-                                    unsafe_allow_html=True,
-                                )
+                            now_v = time.perf_counter()
+                            if (now_v - last_v_ui_update) >= 0.20 or idx == total:
+                                last_v_ui_update = now_v
                                 video_placeholder.image(
                                     cv2.cvtColor(ann_frame, cv2.COLOR_BGR2RGB),
                                     channels="RGB",
                                     use_container_width=True,
                                 )
+                                short_scen, _, _, hex_color, _ = classify_scenario(count)
+                                v_stats_placeholder.markdown(
+                                    render_live_stats_html(
+                                        count=count,
+                                        unique_val=unique_in_video,
+                                        peak_seen=max_in_video,
+                                        short_scen=short_scen,
+                                        hex_color=hex_color,
+                                        fps_ema=extra["processing_fps"],
+                                        lat_ema=extra["latency_ms"],
+                                        blur_faces=blur_faces,
+                                    ),
+                                    unsafe_allow_html=True,
+                                )
 
                             prog = min(1.0, float(idx) / max(total, 1))
                             progress_bar.progress(prog, text=f"Processando frame {idx}/{total} ({prog * 100:.0f}%)")
-                            p_cur.metric("👥 Pessoas no Frame", count)
-                            p_uniq.metric("🚶 Pessoas Únicas (Fluxo)", unique_in_video)
-                            p_max.metric("🏆 Pico Simultâneo", max_in_video)
-                            p_fps.metric("⚡ FPS Processamento", f"{extra['processing_fps']:.1f}")
 
                         progress_bar.progress(1.0, text="Processamento concluído com sucesso!")
                         st.success(
@@ -1025,17 +1099,17 @@ def main() -> None:
             kpi1, kpi2, kpi3, kpi4 = st.columns(4)
             with kpi1:
                 st.markdown(
-                    f'<div class="metric-card"><div class="metric-val">{total_analyses}</div><div class="metric-label">Análises Registradas</div></div>',
+                    f'<div class="metric-card notranslate" translate="no"><div class="metric-val">{total_analyses}</div><div class="metric-label">Análises Registradas</div></div>',
                     unsafe_allow_html=True,
                 )
             with kpi2:
                 st.markdown(
-                    f'<div class="metric-card"><div class="metric-val">{max_people}</div><div class="metric-label">Maior Pico Registrado</div></div>',
+                    f'<div class="metric-card notranslate" translate="no"><div class="metric-val">{max_people}</div><div class="metric-label">Maior Pico Registrado</div></div>',
                     unsafe_allow_html=True,
                 )
             with kpi3:
                 st.markdown(
-                    f'<div class="metric-card"><div class="metric-val">{avg_people:.1f}</div><div class="metric-label">Média de Pessoas</div></div>',
+                    f'<div class="metric-card notranslate" translate="no"><div class="metric-val">{avg_people:.1f}</div><div class="metric-label">Média de Pessoas</div></div>',
                     unsafe_allow_html=True,
                 )
             with kpi4:
@@ -1045,7 +1119,7 @@ def main() -> None:
                     else "N/A"
                 )
                 st.markdown(
-                    f'<div class="metric-card"><div class="metric-val" style="font-size: 1.35rem;">{most_common_scen}</div><div class="metric-label">Cenário Predominante</div></div>',
+                    f'<div class="metric-card notranslate" translate="no"><div class="metric-val" style="font-size: 1.35rem;">{most_common_scen}</div><div class="metric-label">Cenário Predominante</div></div>',
                     unsafe_allow_html=True,
                 )
 
@@ -1107,29 +1181,29 @@ def main() -> None:
         st.markdown("### ⚙️ Informações do Modelo, Arquitetura Back-End e Diagnóstico")
         hw = get_system_hardware_info()
 
-        st.markdown("##### 🧠 Motor de Inteligência Artificial e Capacidades")
+        st.markdown("##### 🧠 Modelo Oficial Único e Capacidades")
         col_m1, col_m2 = st.columns(2)
         with col_m1:
             st.markdown(
                 f"""
-                - **Pesos Selecionados:** `{selected_model_name}`
-                - **Resolução Base de Inferência:** `{IMAGE_SIZE}x{IMAGE_SIZE} px` (`640x640` em OpenVINO)
+                - **Modelo Ativo:** `{selected_model_name}` (YOLO11m Especializado — **mAP50: 79.2%**, **Recall: 69.9%**)
+                - **Resolução de Inferência:** `{IMAGE_SIZE}x{IMAGE_SIZE} px` (`640x640` via Intel OpenVINO)
                 - **Classes Reconhecidas:** `{getattr(model, 'names', {0: 'pessoa'})}`
-                - **Motor Alta Densidade:** Tiling Sobreposto 2x2 + Fusão Ponderada (WBF) + Supressão de Contenção (IoA)
+                - **Motor Alta Densidade:** Tiling Sobreposto + Fusão Ponderada (WBF) + Supressão de Contenção (IoA)
                 """
             )
         with col_m2:
             st.markdown(
                 """
-                - **Rastreamento Multi-Objeto (MOT):** `PersonTracker` (IoU + Velocidade + Trajetórias + Pessoas Únicas)
-                - **Anonimização LGPD:** Haar Cascade na zona superior + Fallback Anatômico de Cabeça (100% cobertura)
-                - **Persistência de Dados:** Banco relacional `SQLite (WAL)` + sincronização `CSV` com desduplicação automática
-                - **Modos Unificados:** Web App (Streamlit) + Modo Feira Tela Cheia (`python app.py --feira`)
+                - **Rastreamento Multi-Objeto (MOT):** `PersonTracker` (IoU + Velocidade + Pessoas Únicas)
+                - **Anonimização LGPD:** Detecção adaptativa para Close-Ups de Webcam e Corpo Inteiro
+                - **Persistência de Dados:** Banco relacional `SQLite (WAL)` + sincronização `CSV` com desduplicação
+                - **Renderização Web Estável:** Painel DOM consolidado com blindagem `notranslate` contra erros `removeChild`
                 """
             )
 
         st.markdown("---")
-        st.markdown("##### 📦 Diagnóstico Real do Hardware e Ambiente")
+        st.markdown("##### 📦 Diagnóstico Real do Notebook e Aceleradores")
         col_env1, col_env2 = st.columns(2)
         with col_env1:
             st.write(f"**Processador (CPU):** {hw['cpu_name']} ({hw['cpu_count']} threads lógicas)")
@@ -1141,7 +1215,7 @@ def main() -> None:
             st.write(f"**Dispositivo Selecionado:** `{selected_device}`")
 
         st.markdown("---")
-        st.markdown("##### 🚀 Execução em Janela Desktop / Modo Feira (60+ FPS)")
+        st.markdown("##### 🚀 Execução em Janela Desktop / Modo Feira")
         st.markdown(
             """
             Você pode iniciar a janela nativa de alta taxa de quadros tanto pelo botão na aba **Webcam** quanto pelo terminal:
@@ -1187,8 +1261,6 @@ if __name__ == "__main__":
         parser.add_argument("--blur", action="store_true", help="Inicia com Desfoque Facial LGPD ativo")
         cli_args, _ = parser.parse_known_args()
 
-        # Se invocado diretamente via `python app.py` (com ou sem --feira), abre o Modo Feira Desktop;
-        # se invocado via `streamlit run app.py`, `_is_running_in_streamlit()` acima já direciona para `main()`.
         run_feira_desktop_mode(
             model_name=cli_args.model,
             source=cli_args.source,

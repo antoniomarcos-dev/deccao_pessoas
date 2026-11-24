@@ -1,6 +1,7 @@
 """
 Motor Central de Inferência, Detecção Multi-Escala/Tiling (Alta Densidade),
 Anonimização LGPD de Alta Performance, Rastreamento e Persistência com YOLO.
+Otimizado para notebooks Intel Core i7 (12ª Geração) + Intel UHD Graphics (OpenVINO FP16).
 """
 
 from __future__ import annotations
@@ -38,6 +39,7 @@ from utils.tracker import HeatmapAccumulator, PersonTracker, TrackedPerson, rend
 logger = get_logger("inference")
 
 _MODEL_CACHE: dict[str, YOLO] = {}
+_WARMED_MODELS: set[str] = set()
 _MODEL_LOCK = threading.RLock()
 _FAILED_DEVICES: set[str] = set()
 _FACE_CASCADE: cv2.CascadeClassifier | None = None
@@ -62,11 +64,11 @@ def _is_openvino_model(model: Any) -> bool:
     return "openvino" in model_str.lower()
 
 
-def load_model(weights: str | Path, device: str | None = None, force_pytorch: bool = False) -> YOLO:
+def load_model(weights: str | Path = DEFAULT_MODEL_NAME, device: str | None = None, force_pytorch: bool = False) -> YOLO:
     """
-    Carrega e mantém o modelo YOLO em cache thread-safe.
-    Se o dispositivo for `intel:*` e os pesos forem `best.pt` (e `force_pytorch=False`),
-    utiliza o modelo exportado `best_openvino_model` para aceleração de hardware.
+    Carrega e mantém o modelo YOLO em cache thread-safe com aquecimento automático (warmup).
+    Quando o dispositivo é `intel:*` e os pesos são `best.pt`, utiliza `best_openvino_model` (FP16)
+    para máxima taxa de quadros na GPU integrada Intel UHD ou CPU Intel Core i7.
     """
     weights_str = str(weights)
     orig_weights_str = weights_str
@@ -83,6 +85,7 @@ def load_model(weights: str | Path, device: str | None = None, force_pytorch: bo
 
     resolved_path = ROOT_DIR / weights_str if not Path(weights_str).is_absolute() else Path(weights_str)
     key = str(resolved_path if resolved_path.exists() else weights_str)
+    warmup_key = f"{key}::{device or 'default'}"
 
     with _MODEL_LOCK:
         if key not in _MODEL_CACHE:
@@ -90,7 +93,28 @@ def load_model(weights: str | Path, device: str | None = None, force_pytorch: bo
             loaded = YOLO(key, task="detect")
             setattr(loaded, "_orig_weights_name", orig_weights_str)
             _MODEL_CACHE[key] = loaded
-        return _MODEL_CACHE[key]
+
+        model = _MODEL_CACHE[key]
+
+        # Executa warmup único na compilação inicial para evitar pico de 600ms no 1º frame da webcam
+        if warmup_key not in _WARMED_MODELS:
+            _WARMED_MODELS.add(warmup_key)
+            try:
+                dummy = np.zeros((320, 320, 3), dtype=np.uint8)
+                _run_raw_predict(
+                    model=model,
+                    frame=dummy,
+                    confidence=0.5,
+                    iou=0.5,
+                    device=device or DEVICE,
+                    imgsz=OPENVINO_IMAGE_SIZE,
+                    augment=False,
+                    max_det=10,
+                )
+            except Exception:
+                pass
+
+        return model
 
 
 def _unwrap_result(result: Any) -> Any:
@@ -117,7 +141,7 @@ def classify_scenario(count: int) -> tuple[str, str, tuple[int, int, int], str, 
 
 def apply_preprocessing(frame: np.ndarray, enhance: bool = True) -> np.ndarray:
     """
-    Aplica realce adaptativo de contraste (CLAHE no espaço LAB) e correção suave de gama
+    Aplica realce adaptativo de contraste (CLAHE no espaço LAB)
     para melhorar detecção em ambientes escuros, contra-luz ou neblina.
     """
     if not enhance or frame is None or frame.size == 0:
@@ -126,7 +150,6 @@ def apply_preprocessing(frame: np.ndarray, enhance: bool = True) -> np.ndarray:
     lab = cv2.cvtColor(frame, cv2.COLOR_BGR2LAB)
     l_channel, a, b = cv2.split(lab)
 
-    # Verifica se a cena é muito escura para ajustar clipLimit dinamicamente
     mean_l = float(np.mean(l_channel))
     clip_limit = 2.8 if mean_l < 85.0 else 2.0
 
@@ -149,7 +172,7 @@ def _run_raw_predict(
     max_det: int,
 ) -> Any:
     """
-    Executa `model.predict` com proteção automática contra erros de driver/kernel (ex: Intel GPU CISA)
+    Executa `model.predict` com proteção automática contra erros de driver/kernel
     e incompatibilidades entre dispositivos OpenVINO e PyTorch.
     """
     is_openvino = _is_openvino_model(model)
@@ -190,7 +213,6 @@ def _run_raw_predict(
         _FAILED_DEVICES.add(predict_device)
         fallback_dev = "intel:cpu" if is_openvino and predict_device != "intel:cpu" else "cpu"
         if is_openvino and fallback_dev == "cpu":
-            # Se até intel:cpu falhar no modelo OpenVINO, carrega o best.pt em PyTorch CPU
             pt_model = load_model(getattr(model, "_orig_weights_name", DEFAULT_MODEL_NAME), device="cpu", force_pytorch=True)
             with _MODEL_LOCK:
                 results = pt_model.predict(
@@ -257,7 +279,6 @@ def merge_boxes_wbf_nms(
         c_i = confs[i]
         a_i = areas[i]
 
-        # Calcula IoU e IoA (interseção sobre menor área) com todas as caixas restantes
         rem_idx = np.where(~suppressed[i + 1 :])[0] + (i + 1)
         if len(rem_idx) > 0:
             b_rem = boxes[rem_idx]
@@ -277,19 +298,16 @@ def merge_boxes_wbf_nms(
             min_area = np.minimum(a_i, a_rem)
             ioa = inter / np.maximum(min_area, 1e-6)
 
-            # Caixas que representam a mesma pessoa (alto IoU) -> faz fusão ponderada pelas confianças
             same_person_mask = iou >= iou_threshold
             if np.any(same_person_mask):
                 cluster_indices = rem_idx[same_person_mask]
                 cluster_boxes = np.vstack([b_i[None, :], boxes[cluster_indices]])
                 cluster_weights = np.concatenate([[c_i], confs[cluster_indices]])
                 fused_box = np.average(cluster_boxes, axis=0, weights=cluster_weights)
-                # Impulsiona levemente a confiança quando múltiplos tiles/escalas concordam
                 boost = min(0.06, 0.02 * len(cluster_indices))
                 c_i = min(0.99, float(c_i + boost))
                 b_i = fused_box.astype(np.float32)
 
-            # Suprime tanto duplicatas de IoU quanto caixas fragmentadas contidas dentro de outra (IoA alto)
             suppress_mask = same_person_mask | (ioa >= containment_threshold)
             suppressed[rem_idx[suppress_mask]] = True
 
@@ -310,12 +328,13 @@ def detect_people(
     augment: bool = False,
     max_det: int = MAX_DETECTIONS_DEFAULT,
     high_density: bool = False,
+    fast_stream_mode: bool = False,
 ) -> Any:
     """
     Detecta pessoas no frame.
-    Se `augment=True` ou `high_density=True`, aciona automaticamente o motor aprimorado
-    de alta densidade (Tiling + Multi-Escala com fusão WBF/NMS), garantindo detecção precisa
-    tanto de pessoas próximas quanto de grupos/multidões ao fundo, mesmo em modelos OpenVINO!
+    Se `augment=True` ou `high_density=True`, aciona o motor aprimorado de alta densidade
+    (Tiling + Fusão WBF/NMS). Quando `fast_stream_mode=True` (webcam/vídeo em tempo real),
+    usa Tiling Horizontal 1x2 otimizado para manter alto FPS no notebook.
     """
     if augment or high_density:
         return detect_people_enhanced(
@@ -328,6 +347,7 @@ def detect_people(
             max_det=max_det,
             use_tta=augment,
             multi_scale=True,
+            fast_stream_mode=fast_stream_mode,
         )
 
     start_time = time.perf_counter()
@@ -356,10 +376,13 @@ def detect_people_enhanced(
     max_det: int = MAX_DETECTIONS_DEFAULT,
     use_tta: bool = False,
     multi_scale: bool = True,
+    fast_stream_mode: bool = False,
 ) -> Any:
     """
     Motor de Detecção de Alta Densidade (Multi-Scale + Sliced Tiling SAHI-like + Fusão WBF/NMS).
-    Ideal para grupos, feiras, auditórios e multidões onde há pessoas pequenas/distantes ou sobrepostas.
+    - Em fotos estáticas (`fast_stream_mode=False`): executa 1 passe global + 4 tiles 2x2 sobrepostos.
+    - Em streams de webcam/vídeo (`fast_stream_mode=True`): executa 1 passe global + 2 tiles horizontais
+      focados na faixa central/fundo (40% mais leve para rodar fluido na iGPU Intel UHD).
     """
     augment = bool(augment or use_tta)
     if not multi_scale and not augment:
@@ -372,7 +395,7 @@ def detect_people_enhanced(
     all_boxes: list[np.ndarray] = []
     all_scores: list[np.ndarray] = []
 
-    # 1. Inferência no Frame Completo (contexto global e pessoas em primeiro plano)
+    # 1. Inferência no Frame Completo
     base_res = _run_raw_predict(
         model=model,
         frame=frame,
@@ -387,16 +410,21 @@ def detect_people_enhanced(
         all_boxes.append(base_res.boxes.xyxy.cpu().numpy())
         all_scores.append(base_res.boxes.conf.cpu().numpy())
 
-    # 2. Inferência em Tiles Sobrepostos (2x2 com 25% de overlap) para capturar grupos ao fundo
-    # Funciona perfeitamente tanto em OpenVINO (cada tile roda a 640x640 nativo) quanto em PyTorch!
+    # 2. Inferência em Tiles Sobrepostos
     if w >= 480 and h >= 360:
-        overlap = 0.25
+        overlap = 0.22
         tile_w = int(w * (0.5 + overlap * 0.5))
-        tile_h = int(h * (0.5 + overlap * 0.5))
         x_offsets = [0, max(0, w - tile_w)]
-        y_offsets = [0, max(0, h - tile_h)]
 
-        # Confiança ligeiramente mais sensível para pessoas pequenas nos tiles
+        if fast_stream_mode:
+            # Em tempo real, foca 2 tiles horizontais cobrindo a faixa de interesse (10% a 90% da altura)
+            y0 = int(h * 0.08)
+            tile_h = int(h * 0.84)
+            y_offsets = [y0]
+        else:
+            tile_h = int(h * (0.5 + overlap * 0.5))
+            y_offsets = [0, max(0, h - tile_h)]
+
         tile_conf = max(0.12, confidence * 0.88)
 
         for y0 in y_offsets:
@@ -422,8 +450,12 @@ def detect_people_enhanced(
                     all_boxes.append(t_boxes)
                     all_scores.append(t_confs)
 
-    # 3. Fusão WBF + NMS + Supressão de Contenção e reconstrução segura do objeto Results
-    device_tensor = base_res.boxes.data.device if (base_res.boxes is not None and hasattr(base_res.boxes, "data")) else torch.device("cpu")
+    # 3. Fusão WBF + NMS + Supressão de Contenção
+    device_tensor = (
+        base_res.boxes.data.device
+        if (base_res.boxes is not None and hasattr(base_res.boxes, "data"))
+        else torch.device("cpu")
+    )
 
     if all_boxes:
         cat_boxes = np.vstack(all_boxes)
@@ -435,7 +467,6 @@ def detect_people_enhanced(
             containment_threshold=0.78,
             max_det=max_det,
         )
-        # Filtra pelo limiar de confiança original solicitado pelo usuário
         keep = merged_scores >= confidence
         merged_boxes = merged_boxes[keep]
         merged_scores = merged_scores[keep]
@@ -518,7 +549,6 @@ def compute_crowd_metrics(result: Any) -> dict[str, Any]:
     if hasattr(res, "orig_img") and res.orig_img is not None:
         h, w = res.orig_img.shape[:2]
         frame_area = float(max(1, h * w))
-        # Usa máscara binária rápida para calcular a cobertura real sem somar sobreposições duas vezes
         mask = np.zeros((h, w), dtype=np.uint8)
         for b in boxes.astype(int):
             x1, y1 = max(0, b[0]), max(0, b[1])
@@ -549,13 +579,14 @@ def blur_detected_faces(
     strict_lgpd: bool = True,
 ) -> np.ndarray:
     """
-    Anonimiza rostos no frame em conformidade com a LGPD.
-    Otimizações de Back-End:
-      1. Restringe a busca do Haar Cascade aos 45% superiores (região da cabeça/ombros) de cada
-         pessoa detectada, tornando o algoritmo 3x a 4x mais rápido e evitando falsos positivos no tronco/pernas.
-      2. Modo `strict_lgpd`: Quando uma pessoa é detectada pelo YOLO mas está de perfil, costas/inclinada
-         ou distante (onde o Haar Cascade frontal não dispara), aplica desfoque adaptativo na região
-         anatômica superior da cabeça da pessoa, garantindo 100% de proteção de privacidade.
+    Anonimiza rostos no frame em conformidade com a LGPD, calibrado tanto para
+    Close-Ups/Retratos de Webcam (onde o rosto ocupa o centro da caixa) quanto para
+    Pessoas de Corpo Inteiro/Distantes:
+      1. Redimensiona dinamicamente a ROI para no máximo 240px de largura antes do Haar Cascade,
+         executando a detecção facial em < 1.5ms e encontrando rostos grandes de webcam com precisão.
+      2. Se o Haar Cascade encontrar o rosto, expande suavemente a margem (15%) para cobrir da testa ao queixo.
+      3. Se `strict_lgpd=True` e o rosto estiver inclinado/perfil, calcula a posição anatômica do rosto
+         diferenciando automaticamente entre Close-Up de Webcam (busto/retrato) e Corpo Inteiro.
     """
     if frame is None or frame.size == 0:
         return frame
@@ -573,9 +604,8 @@ def blur_detected_faces(
         roi = output[y1:y2, x1:x2]
         if roi.size == 0:
             return
-        # Kernel adaptativo proporcional ao tamanho do rosto/cabeça
         reg_dim = max(x2 - x1, y2 - y1)
-        k = max(15, min(99, (reg_dim // 2) | 1))
+        k = max(21, min(111, (reg_dim // 2) | 1))
         if blur_kernel_size > 31:
             k = max(k, blur_kernel_size | 1)
         output[y1:y2, x1:x2] = cv2.GaussianBlur(roi, (k, k), 0)
@@ -590,34 +620,71 @@ def blur_detected_faces(
             if bw < 8 or bh < 12:
                 continue
 
-            # Analisa apenas os 45% superiores da caixa da pessoa (cabeça e ombros)
-            head_y2 = min(by2, by1 + max(16, int(bh * 0.45)))
+            # Detecta se a caixa é um Close-Up/Busto de Webcam (apenas cabeça e ombros) ou Corpo Inteiro
+            aspect_ratio = float(bw) / float(max(1, bh))
+            is_closeup_bust = (aspect_ratio >= 0.56) or (bh >= height * 0.48 and by2 >= height - 25)
+
+            # Em close-up de webcam o rosto vai até ~85% da altura da caixa; em corpo inteiro fica nos 50% superiores
+            search_ratio = 0.88 if is_closeup_bust else 0.52
+            head_y2 = min(by2, by1 + max(20, int(bh * search_ratio)))
             face_found = False
 
             if gray is not None and (head_y2 - by1) >= 20 and bw >= 20:
                 roi_gray = gray[by1:head_y2, bx1:bx2]
+                rh, rw = roi_gray.shape[:2]
+
+                # Downscale rápido para máx 220px de largura: acelera o Haar Cascade em 5x e melhora detecção de rostos grandes
+                scale = min(1.0, 220.0 / float(max(1, rw)))
+                if scale < 1.0:
+                    small_w = max(24, int(rw * scale))
+                    small_h = max(24, int(rh * scale))
+                    proc_gray = cv2.resize(roi_gray, (small_w, small_h), interpolation=cv2.INTER_AREA)
+                else:
+                    proc_gray = roi_gray
+
+                min_face_dim = max(18, int(min(proc_gray.shape[:2]) * 0.22))
                 faces = cascade.detectMultiScale(
-                    roi_gray,
-                    scaleFactor=1.12,
-                    minNeighbors=4,
-                    minSize=(18, 18),
+                    proc_gray,
+                    scaleFactor=1.10,
+                    minNeighbors=3,
+                    minSize=(min_face_dim, min_face_dim),
                 )
+                inv_scale = 1.0 / scale
                 for fx, fy, fw, fh in faces:
-                    _apply_adaptive_blur(bx1 + fx, by1 + fy, bx1 + fx + fw, by1 + fy + fh)
+                    real_fx = int(fx * inv_scale)
+                    real_fy = int(fy * inv_scale)
+                    real_fw = int(fw * inv_scale)
+                    real_fh = int(fh * inv_scale)
+                    # Expande levemente (12% X, 18% Y) para cobrir todo o rosto (testa ao queixo)
+                    pad_x = int(real_fw * 0.12)
+                    pad_y = int(real_fh * 0.18)
+                    _apply_adaptive_blur(
+                        bx1 + real_fx - pad_x,
+                        by1 + real_fy - pad_y,
+                        bx1 + real_fx + real_fw + pad_x,
+                        by1 + real_fy + real_fh + pad_y,
+                    )
                     face_found = True
 
-            # Fallback anatômico LGPD: se o rosto está de perfil, distante ou inclinado
+            # Fallback anatômico LGPD calibrado conforme o enquadramento (Close-Up vs Corpo Inteiro)
             if not face_found and strict_lgpd:
-                est_h = max(10, int(bh * 0.24 if bh > width * 0.15 else bh * 0.30))
-                est_w = max(10, int(bw * 0.56))
                 cx = (bx1 + bx2) // 2
+                if is_closeup_bust:
+                    # Em close-up de webcam (cabeça e ombros), o rosto fica exatamente no centro da caixa (15% a 78% da altura)
+                    est_w = max(16, int(bw * 0.56))
+                    hy1 = by1 + int(bh * 0.14)
+                    hy2 = by1 + int(bh * 0.78)
+                else:
+                    # Em corpo inteiro / média distância, a cabeça fica no topo (3% a 28% da altura)
+                    est_w = max(10, int(bw * 0.54))
+                    hy1 = by1 + int(bh * 0.03)
+                    hy2 = by1 + int(bh * 0.28)
+
                 hx1 = cx - est_w // 2
                 hx2 = cx + est_w // 2
-                hy1 = by1 + int(bh * 0.02)
-                hy2 = min(by2, hy1 + est_h)
-                _apply_adaptive_blur(hx1, hy1, hx2, hy2)
+                _apply_adaptive_blur(hx1, hy1, hx2, min(by2, hy2))
     elif gray is not None:
-        faces = cascade.detectMultiScale(gray, scaleFactor=1.12, minNeighbors=5, minSize=(24, 24))
+        faces = cascade.detectMultiScale(gray, scaleFactor=1.12, minNeighbors=4, minSize=(24, 24))
         for fx, fy, fw, fh in faces:
             _apply_adaptive_blur(fx, fy, fx + fw, fy + fh)
 
@@ -632,16 +699,15 @@ def annotate_frame(
     thickness: int = 2,
     tracks: list[TrackedPerson] | None = None,
     heatmap: HeatmapAccumulator | bool | None = None,
-    show_trails: bool = True,
+    show_trails: bool = False,
     color_by_scenario: bool = False,
 ) -> np.ndarray:
     """
-    Renderiza anotações visuais de nível empresarial sobre o frame:
+    Renderiza anotações visuais limpas e profissionais sobre o frame:
+    - Desfoque de privacidade LGPD (aplicado antes das caixas e textos)
     - Mapa de calor espacial (opcional)
-    - Desfoque de privacidade LGPD (antes das caixas/textos para manter os rótulos nítidos!)
-    - Caixas delimitadoras codificadas por confiança ou por cenário de ocupação (Modo Feira)
-    - Trilhas de movimento suaves quando o rastreamento está ativo
-    - Badge superior com total de pessoas e classificação automática do cenário
+    - Caixas delimitadoras com cantos HUD codificadas por confiança ou por cenário (Modo Feira)
+    - Sem linhas/pontos sobre o rosto dos usuários
     """
     res = _unwrap_result(result)
 
@@ -661,7 +727,7 @@ def annotate_frame(
     count = len(boxes)
     short_scen, full_scen, scen_color, _, _ = classify_scenario(count)
 
-    # 1. Aplica desfoque facial ANTES de desenhar caixas e textos para não borrar os rótulos!
+    # 1. Aplica desfoque facial ANTES de desenhar caixas e textos
     if blur_faces:
         annotated = blur_detected_faces(annotated, boxes=boxes if count > 0 else None)
 
@@ -673,21 +739,15 @@ def annotate_frame(
 
     h_img, w_img = annotated.shape[:2]
 
-    # 3. Se houver tracks ativos, desenha trilhas de deslocamento e associa IDs às caixas
+    # 3. Associa IDs de rastreamento às caixas (sem desenhar linhas azuis sobre o rosto)
     track_id_by_box_idx: dict[int, int] = {}
-    if tracks:
+    if tracks and count > 0:
         for trk in tracks:
-            if show_trails and len(trk.trajectory) >= 2:
-                pts = np.array(trk.trajectory, dtype=np.int32).reshape((-1, 1, 2))
-                cv2.polylines(annotated, [pts], isClosed=False, color=(255, 200, 0), thickness=2, lineType=cv2.LINE_AA)
-
-            if count > 0:
-                t_box = trk.bbox
-                # Associa ao box detectado mais próximo
-                dists = np.linalg.norm(boxes - t_box[None, :], axis=1)
-                best_i = int(np.argmin(dists))
-                if dists[best_i] < max(w_img, h_img) * 0.15:
-                    track_id_by_box_idx[best_i] = trk.track_id
+            t_box = trk.bbox
+            dists = np.linalg.norm(boxes - t_box[None, :], axis=1)
+            best_i = int(np.argmin(dists))
+            if dists[best_i] < max(w_img, h_img) * 0.15:
+                track_id_by_box_idx[best_i] = trk.track_id
 
     # 4. Desenha Caixas e Rótulos
     for i in range(count):
@@ -702,15 +762,14 @@ def annotate_frame(
         if color_by_scenario:
             color = scen_color
         elif conf >= 0.65:
-            color = (60, 235, 90)  # Verde vibrante
+            color = (60, 235, 90)
         elif conf >= 0.40:
-            color = (0, 215, 255)  # Amarelo/Âmbar
+            color = (0, 215, 255)
         else:
-            color = (60, 90, 255)  # Coral/Vermelho
+            color = (60, 90, 255)
 
         cv2.rectangle(annotated, (x1, y1), (x2, y2), color, thickness, cv2.LINE_AA)
 
-        # Cantos reforçados estilo HUD
         corner_len = max(6, min(16, (x2 - x1) // 5, (y2 - y1) // 5))
         cv2.line(annotated, (x1, y1), (x1 + corner_len, y1), color, thickness + 1)
         cv2.line(annotated, (x1, y1), (x1, y1 + corner_len), color, thickness + 1)
@@ -720,10 +779,10 @@ def annotate_frame(
         if show_labels or show_conf:
             tid = track_id_by_box_idx.get(i)
             parts = []
-            if tid is not None:
+            if show_labels:
+                parts.append(f"pessoa #{tid}" if tid is not None else "pessoa")
+            elif tid is not None:
                 parts.append(f"#{tid}")
-            elif show_labels:
-                parts.append("pessoa")
             if show_conf:
                 parts.append(f"{conf * 100:.0f}%")
             label = " ".join(parts).strip()
@@ -832,11 +891,8 @@ def process_video(
     export_video_path: str | Path | None = None,
 ) -> Generator[tuple[np.ndarray, int, int, int, float, dict[str, Any]], None, None]:
     """
-    Processa um arquivo de vídeo frame a frame com suporte a:
-    - Rastreamento de pessoas únicas e trilhas de movimento (`PersonTracker`)
-    - Mapa de calor temporal (`HeatmapAccumulator`)
-    - Pré-processamento CLAHE Low-Light e Modo Alta Densidade
-    - Exportação opcional do vídeo anotado em formato `.mp4`
+    Processa um arquivo de vídeo frame a frame com rastreamento de pessoas únicas,
+    mapa de calor opcional, realce Low-Light e exportação `.mp4`.
     """
     capture = cv2.VideoCapture(str(video_path))
     if not capture.isOpened():
@@ -884,8 +940,8 @@ def process_video(
                 device=device,
                 high_density=high_density,
                 max_det=max_det,
+                fast_stream_mode=True,
             )
-            # Preserva a imagem original no resultado para anotação limpa
             result.orig_img = frame
 
             count = count_people(result)
